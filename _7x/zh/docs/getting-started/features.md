@@ -1,109 +1,103 @@
-# Features
+# 功能特性
 
-uv provides essential features for Python development — from installing Python and hacking on simple
-scripts to working on large projects that support multiple Python versions and platforms.
+uv 为 Python 开发提供核心功能——从安装 Python 和编写简单脚本，到支持多 Python 版本和多平台的大型项目开发。
 
-uv's interface can be broken down into sections, which are usable independently or together.
+uv 的接口可以划分为几个部分，这些部分既可以独立使用，也可以组合使用。
 
-## Python versions
+## Python 版本
 
-Installing and managing Python itself.
+安装和管理 Python 本身。
 
-- `uv python install`: Install Python versions.
-- `uv python list`: View available Python versions.
-- `uv python find`: Find an installed Python version.
-- `uv python pin`: Pin the current project to use a specific Python version.
-- `uv python uninstall`: Uninstall a Python version.
+- `uv python install`: 安装 Python 版本。
+- `uv python list`: 查看可用的 Python 版本。
+- `uv python find`: 查找已安装的 Python 版本。
+- `uv python pin`: 将当前项目固定使用特定的 Python 版本。
+- `uv python uninstall`: 卸载 Python 版本。
 
-See the [guide on installing Python](../guides/install-python.md) to get started.
+请参阅 [安装 Python 指南](../guides/install-python.md) 开始使用。
 
-## Scripts
+## 脚本
 
-Executing standalone Python scripts, e.g., `example.py`.
+执行独立的 Python 脚本，例如 `example.py`。
 
-- `uv run`: Run a script.
-- `uv add --script`: Add a dependency to a script.
-- `uv remove --script`: Remove a dependency from a script.
+- `uv run`: 运行脚本。
+- `uv add --script`: 为脚本添加依赖。
+- `uv remove --script`: 从脚本移除依赖。
 
-See the [guide on running scripts](../guides/scripts.md) to get started.
+请参阅 [运行脚本指南](../guides/scripts.md) 开始使用。
 
-## Projects
+## 项目
 
-Creating and working on Python projects, i.e., with a `pyproject.toml`.
+创建和处理 Python 项目（即包含 `pyproject.toml` 的项目）。
 
-- `uv init`: Create a new Python project.
-- `uv add`: Add a dependency to the project.
-- `uv remove`: Remove a dependency from the project.
-- `uv sync`: Sync the project's dependencies with the environment.
-- `uv lock`: Create a lockfile for the project's dependencies.
-- `uv run`: Run a command in the project environment.
-- `uv tree`: View the dependency tree for the project.
-- `uv build`: Build the project into distribution archives.
-- `uv publish`: Publish the project to a package index.
+- `uv init`: 创建新的 Python 项目。
+- `uv add`: 为项目添加依赖。
+- `uv remove`: 从项目移除依赖。
+- `uv sync`: 将项目依赖与环境同步。
+- `uv lock`: 为项目依赖创建锁文件。
+- `uv run`: 在项目环境中运行命令。
+- `uv tree`: 查看项目的依赖树。
+- `uv build`: 将项目构建为分发包。
+- `uv publish`: 将项目发布到包索引。
 
-See the [guide on projects](../guides/projects.md) to get started.
+请参阅 [项目指南](../guides/projects.md) 开始使用。
 
-## Tools
+## 工具
 
-Running and installing tools published to Python package indexes, e.g., `ruff` or `black`.
+运行和安装发布到 Python 包索引的工具，例如 `ruff` 或 `black`。
 
-- `uvx` / `uv tool run`: Run a tool in a temporary environment.
-- `uv tool install`: Install a tool user-wide.
-- `uv tool uninstall`: Uninstall a tool.
-- `uv tool list`: List installed tools.
-- `uv tool update-shell`: Update the shell to include tool executables.
+- `uvx` / `uv tool run`: 在临时环境中运行工具。
+- `uv tool install`: 为用户全局安装工具。
+- `uv tool uninstall`: 卸载工具。
+- `uv tool list`: 列出已安装的工具。
+- `uv tool update-shell`: 更新 Shell 以包含工具可执行文件。
 
-See the [guide on tools](../guides/tools.md) to get started.
+请参阅 [工具指南](../guides/tools.md) 开始使用。
 
-## The pip interface
+## pip 接口
 
-Manually managing environments and packages — intended to be used in legacy workflows or cases where
-the high-level commands do not provide enough control.
+手动管理环境和包——旨在用于遗留工作流或高级命令无法提供足够控制的情况。
 
-Creating virtual environments (replacing `venv` and `virtualenv`):
+创建虚拟环境（替代 `venv` 和 `virtualenv`）：
 
-- `uv venv`: Create a new virtual environment.
+- `uv venv`: 创建新的虚拟环境。
 
-See the documentation on [using environments](../pip/environments.md) for details.
+有关详细信息，请参阅 [使用环境](../pip/environments.md) 文档。
 
-Managing packages in an environment (replacing [`pip`](https://github.com/pypa/pip) and
-[`pipdeptree`](https://github.com/tox-dev/pipdeptree)):
+管理环境中的包（替代 [`pip`](https://github.com/pypa/pip) 和 [`pipdeptree`](https://github.com/tox-dev/pipdeptree)）：
 
-- `uv pip install`: Install packages into the current environment.
-- `uv pip show`: Show details about an installed package.
-- `uv pip freeze`: List installed packages and their versions.
-- `uv pip check`: Check that the current environment has compatible packages.
-- `uv pip list`: List installed packages.
-- `uv pip uninstall`: Uninstall packages.
-- `uv pip tree`: View the dependency tree for the environment.
+- `uv pip install`: 将包安装到当前环境中。
+- `uv pip show`: 显示已安装包的详细信息。
+- `uv pip freeze`: 列出已安装的包及其版本。
+- `uv pip check`: 检查当前环境中的包是否兼容。
+- `uv pip list`: 列出已安装的包。
+- `uv pip uninstall`: 卸载包。
+- `uv pip tree`: 查看环境的依赖树。
 
-See the documentation on [managing packages](../pip/packages.md) for details.
+有关详细信息，请参阅 [管理包](../pip/packages.md) 文档。
 
-Locking packages in an environment (replacing [`pip-tools`](https://github.com/jazzband/pip-tools)):
+锁定环境中的包（替代 [`pip-tools`](https://github.com/jazzband/pip-tools)）：
 
-- `uv pip compile`: Compile requirements into a lockfile.
-- `uv pip sync`: Sync an environment with a lockfile.
+- `uv pip compile`: 将需求文件编译为锁文件。
+- `uv pip sync`: 使用锁文件同步环境。
 
-See the documentation on [locking environments](../pip/compile.md) for details.
+有关详细信息，请参阅 [锁定环境](../pip/compile.md) 文档。
 
 !!! important
 
-    These commands do not exactly implement the interfaces and behavior of the tools they are based on. The further you stray from common workflows, the more likely you are to encounter differences. Consult the [pip-compatibility guide](../pip/compatibility.md) for details.
+    这些命令并不完全实现其所基于工具的接口和行为。偏离常见工作流越远，越可能遇到差异。详情请查阅 [pip 兼容性指南](../pip/compatibility.md)。
 
-## Utility
+## 实用工具
 
-Managing and inspecting uv's state, such as the cache, storage directories, or performing a
-self-update:
+管理和检查 uv 的状态，例如缓存、存储目录或执行自我更新：
 
-- `uv cache clean`: Remove cache entries.
-- `uv cache prune`: Remove outdated cache entries.
-- `uv cache dir`: Show the uv cache directory path.
-- `uv tool dir`: Show the uv tool directory path.
-- `uv python dir`: Show the uv installed Python versions path.
-- `uv self update`: Update uv to the latest version.
+- `uv cache clean`: 移除缓存条目。
+- `uv cache prune`: 移除过时的缓存条目。
+- `uv cache dir`: 显示 uv 缓存目录路径。
+- `uv tool dir`: 显示 uv 工具目录路径。
+- `uv python dir`: 显示 uv 安装的 Python 版本路径。
+- `uv self update`: 将 uv 更新到最新版本。
 
-## Next steps
+## 后续步骤
 
-Read the [guides](../guides/index.md) for an introduction to each feature, check out the
-[concept](../concepts/index.md) pages for in-depth details about uv's features, or learn how to
-[get help](./help.md) if you run into any problems.
+阅读 [指南](../guides/index.md) 以了解每个功能的介绍，查看 [概念](../concepts/index.md) 页面以获取 uv 功能的深入细节，或者在遇到问题时学习如何 [获取帮助](./help.md)。

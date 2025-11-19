@@ -1,18 +1,17 @@
-# Integration guides
+# 集成指南
 
-Learn how to integrate uv with other software:
+学习如何将 uv 与其他软件集成：
 
-- [Using in Docker images](./docker.md)
-- [Using with Jupyter notebooks](./jupyter.md)
-- [Using with marimo notebooks](./marimo.md)
-- [Using with pre-commit](./pre-commit.md)
-- [Using in GitHub Actions](./github.md)
-- [Using in GitLab CI/CD](./gitlab.md)
-- [Using with alternative package indexes](./alternative-indexes.md)
-- [Installing PyTorch](./pytorch.md)
-- [Building a FastAPI application](./fastapi.md)
-- [Using with AWS Lambda](./aws-lambda.md)
-- [Using with Coiled](./coiled.md)
+- [在 Docker 镜像中使用](./docker.md)
+- [与 Jupyter 笔记本一起使用](./jupyter.md)
+- [与 marimo 笔记本一起使用](./marimo.md)
+- [与 pre-commit 一起使用](./pre-commit.md)
+- [在 GitHub Actions 中使用](./github.md)
+- [在 GitLab CI/CD 中使用](./gitlab.md)
+- [与替代包索引一起使用](./alternative-indexes.md)
+- [安装 PyTorch](./pytorch.md)
+- [构建 FastAPI 应用程序](./fastapi.md)
+- [与 AWS Lambda 一起使用](./aws-lambda.md)
+- [与 Coiled 一起使用](./coiled.md)
 
-Or, explore the [concept documentation](../../concepts/index.md) for comprehensive breakdown of each
-feature.
+或者，探索[概念文档](../../concepts/index.md)以获取每个功能的全面解析。

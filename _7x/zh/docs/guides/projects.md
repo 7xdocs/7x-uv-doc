@@ -1,24 +1,24 @@
 ---
-title: Working on projects
+title: 项目工作流程
 description:
   A guide to using uv to create and manage Python projects, including adding dependencies, running
   commands, and building publishable distributions.
 ---
 
-# Working on projects
+# 项目工作流程
 
-uv supports managing Python projects, which define their dependencies in a `pyproject.toml` file.
+uv 支持管理 Python 项目，这些项目在 `pyproject.toml` 文件中定义其依赖关系。
 
-## Creating a new project
+## 创建新项目
 
-You can create a new Python project using the `uv init` command:
+你可以使用 `uv init` 命令创建一个新的 Python 项目：
 
 ```console
 $ uv init hello-world
 $ cd hello-world
 ```
 
-Alternatively, you can initialize a project in the working directory:
+或者，你可以在工作目录中初始化一个项目：
 
 ```console
 $ mkdir hello-world
@@ -26,7 +26,7 @@ $ cd hello-world
 $ uv init
 ```
 
-uv will create the following files:
+uv 将创建以下文件：
 
 ```text
 ├── .gitignore
@@ -36,21 +36,19 @@ uv will create the following files:
 └── pyproject.toml
 ```
 
-The `main.py` file contains a simple "Hello world" program. Try it out with `uv run`:
+`main.py` 文件包含一个简单的 "Hello world" 程序。使用 `uv run` 尝试运行它：
 
 ```console
 $ uv run main.py
 Hello from hello-world!
 ```
 
-## Project structure
+## 项目结构
 
-A project consists of a few important parts that work together and allow uv to manage your project.
-In addition to the files created by `uv init`, uv will create a virtual environment and `uv.lock`
-file in the root of your project the first time you run a project command, i.e., `uv run`,
-`uv sync`, or `uv lock`.
+一个项目由几个重要的部分组成，它们协同工作，使 uv 能够管理你的项目。
+除了 `uv init` 创建的文件外，uv 会在你首次运行项目命令（即 `uv run`、`uv sync` 或 `uv lock`）时，在你的项目根目录中创建一个虚拟环境和 `uv.lock` 文件。
 
-A complete listing would look like:
+完整的列表如下所示：
 
 ```text
 .
@@ -67,7 +65,7 @@ A complete listing would look like:
 
 ### `pyproject.toml`
 
-The `pyproject.toml` contains metadata about your project:
+`pyproject.toml` 包含关于你项目的元数据：
 
 ```toml title="pyproject.toml"
 [project]
@@ -78,107 +76,92 @@ readme = "README.md"
 dependencies = []
 ```
 
-You'll use this file to specify dependencies, as well as details about the project such as its
-description or license. You can edit this file manually, or use commands like `uv add` and
-`uv remove` to manage your project from the terminal.
+你将使用此文件来指定依赖项，以及项目的详细信息，例如其描述或许可证。你可以手动编辑此文件，或使用诸如 `uv add` 和 `uv remove` 之类的命令从终端管理你的项目。
 
 !!! tip
 
-    See the official [`pyproject.toml` guide](https://packaging.python.org/en/latest/guides/writing-pyproject-toml/)
-    for more details on getting started with the `pyproject.toml` format.
+    有关 `pyproject.toml` 格式入门的更多详细信息，请参阅官方的 [`pyproject.toml` 指南](https://packaging.python.org/en/latest/guides/writing-pyproject-toml/)。
 
-You'll also use this file to specify uv [configuration options](../concepts/configuration-files.md)
-in a [`[tool.uv]`](../reference/settings.md) section.
+你还将使用此文件在 [`[tool.uv]`](../reference/settings.md) 部分中指定 uv [配置选项](../concepts/configuration-files.md)。
 
 ### `.python-version`
 
-The `.python-version` file contains the project's default Python version. This file tells uv which
-Python version to use when creating the project's virtual environment.
+`.python-version` 文件包含项目的默认 Python 版本。此文件告诉 uv 在创建项目的虚拟环境时使用哪个 Python 版本。
 
 ### `.venv`
 
-The `.venv` folder contains your project's virtual environment, a Python environment that is
-isolated from the rest of your system. This is where uv will install your project's dependencies.
+`.venv` 文件夹包含你项目的虚拟环境，这是一个与系统其余部分隔离的 Python 环境。这是 uv 安装你项目依赖项的地方。
 
-See the [project environment](../concepts/projects/layout.md#the-project-environment) documentation
-for more details.
+有关更多详细信息，请参阅 [项目环境](../concepts/projects/layout.md#the-project-environment) 文档。
 
 ### `uv.lock`
 
-`uv.lock` is a cross-platform lockfile that contains exact information about your project's
-dependencies. Unlike the `pyproject.toml` which is used to specify the broad requirements of your
-project, the lockfile contains the exact resolved versions that are installed in the project
-environment. This file should be checked into version control, allowing for consistent and
-reproducible installations across machines.
+`uv.lock` 是一个跨平台锁文件，包含关于你项目依赖项的确切信息。与用于指定项目广泛需求的 `pyproject.toml` 不同，锁文件包含安装在项目环境中的确切已解析版本。此文件应检入版本控制系统，以便在不同机器上实现一致且可复现的安装。
 
-`uv.lock` is a human-readable TOML file but is managed by uv and should not be edited manually.
+`uv.lock` 是一个人类可读的 TOML 文件，但由 uv 管理，不应手动编辑。
 
-See the [lockfile](../concepts/projects/layout.md#the-lockfile) documentation for more details.
+有关更多详细信息，请参阅 [锁文件](../concepts/projects/layout.md#the-lockfile) 文档。
 
-## Managing dependencies
+## 管理依赖项
 
-You can add dependencies to your `pyproject.toml` with the `uv add` command. This will also update
-the lockfile and project environment:
+你可以使用 `uv add` 命令向你的 `pyproject.toml` 添加依赖项。这也会更新锁文件和项目环境：
 
 ```console
 $ uv add requests
 ```
 
-You can also specify version constraints or alternative sources:
+你也可以指定版本约束或替代来源：
 
 ```console
-$ # Specify a version constraint
+$ # 指定版本约束
 $ uv add 'requests==2.31.0'
 
-$ # Add a git dependency
+$ # 添加一个 git 依赖
 $ uv add git+https://github.com/psf/requests
 ```
 
-If you're migrating from a `requirements.txt` file, you can use `uv add` with the `-r` flag to add
-all dependencies from the file:
+如果你正在从 `requirements.txt` 文件迁移，你可以使用 `uv add` 和 `-r` 标志来添加文件中的所有依赖项：
 
 ```console
-$ # Add all dependencies from `requirements.txt`.
+$ # 从 `requirements.txt` 添加所有依赖项。
 $ uv add -r requirements.txt -c constraints.txt
 ```
 
-To remove a package, you can use `uv remove`:
+要移除一个包，你可以使用 `uv remove`：
 
 ```console
 $ uv remove requests
 ```
 
-To upgrade a package, run `uv lock` with the `--upgrade-package` flag:
+要升级一个包，使用 `--upgrade-package` 标志运行 `uv lock`：
 
 ```console
 $ uv lock --upgrade-package requests
 ```
 
-The `--upgrade-package` flag will attempt to update the specified package to the latest compatible
-version, while keeping the rest of the lockfile intact.
+`--upgrade-package` 标志将尝试将指定的包更新到最新的兼容版本，同时保持锁文件的其余部分不变。
 
-See the documentation on [managing dependencies](../concepts/projects/dependencies.md) for more
-details.
+有关更多详细信息，请参阅关于 [管理依赖项](../concepts/projects/dependencies.md) 的文档。
 
-## Viewing your version
+## 查看版本
 
-The `uv version` command can be used to read your package's version.
+`uv version` 命令可用于读取你包的版本。
 
-To get the version of your package, run `uv version`:
+要获取你包的版本，运行 `uv version`：
 
 ```console
 $ uv version
 hello-world 0.7.0
 ```
 
-To get the version without the package name, use the `--short` option:
+要获取不带包名的版本，使用 `--short` 选项：
 
 ```console
 $ uv version --short
 0.7.0
 ```
 
-To get version information in a JSON format, use the `--output-format json` option:
+要以 JSON 格式获取版本信息，使用 `--output-format json` 选项：
 
 ```console
 $ uv version --output-format json
@@ -189,26 +172,22 @@ $ uv version --output-format json
 }
 ```
 
-See the [publishing guide](./package.md#updating-your-version) for details on updating your package
-version.
+有关更新你包版本的详细信息，请参阅 [发布指南](./package.md#updating-your-version)。
 
-## Running commands
+## 运行命令
 
-`uv run` can be used to run arbitrary scripts or commands in your project environment.
+`uv run` 可用于在你的项目环境中运行任意脚本或命令。
 
-Prior to every `uv run` invocation, uv will verify that the lockfile is up-to-date with the
-`pyproject.toml`, and that the environment is up-to-date with the lockfile, keeping your project
-in-sync without the need for manual intervention. `uv run` guarantees that your command is run in a
-consistent, locked environment.
+在每次调用 `uv run` 之前，uv 将验证锁文件是否与 `pyproject.toml` 保持最新，并且环境是否与锁文件保持最新，从而使你的项目保持同步而无需手动干预。`uv run` 保证你的命令在一致、锁定的环境中运行。
 
-For example, to use `flask`:
+例如，使用 `flask`：
 
 ```console
 $ uv add flask
 $ uv run -- flask run -p 3000
 ```
 
-Or, to run a script:
+或者，运行一个脚本：
 
 ```python title="example.py"
 # Require a project dependency
@@ -221,8 +200,7 @@ print("hello world")
 $ uv run example.py
 ```
 
-Alternatively, you can use `uv sync` to manually update the environment then activate it before
-executing a command:
+或者，你可以使用 `uv sync` 手动更新环境，然后在执行命令之前激活它：
 
 === "macOS and Linux"
 
@@ -244,18 +222,15 @@ executing a command:
 
 !!! note
 
-    The virtual environment must be active to run scripts and commands in the project without `uv run`. Virtual environment activation differs per shell and platform.
+    必须激活虚拟环境才能在没有 `uv run` 的情况下在项目中运行脚本和命令。虚拟环境的激活方式因 shell 和平台而异。
 
-See the documentation on [running commands and scripts](../concepts/projects/run.md) in projects for
-more details.
+有关更多详细信息，请参阅关于在项目中 [运行命令和脚本](../concepts/projects/run.md) 的文档。
 
-## Building distributions
+## 构建分发包
 
-`uv build` can be used to build source distributions and binary distributions (wheel) for your
-project.
+`uv build` 可用于为你的项目构建源码分发包和二进制分发包（wheel）。
 
-By default, `uv build` will build the project in the current directory, and place the built
-artifacts in a `dist/` subdirectory:
+默认情况下，`uv build` 将在当前目录中构建项目，并将构建的产物放置在 `dist/` 子目录中：
 
 ```console
 $ uv build
@@ -264,12 +239,10 @@ hello-world-0.1.0-py3-none-any.whl
 hello-world-0.1.0.tar.gz
 ```
 
-See the documentation on [building projects](../concepts/projects/build.md) for more details.
+有关更多详细信息，请参阅关于 [构建项目](../concepts/projects/build.md) 的文档。
 
-## Next steps
+## 后续步骤
 
-To learn more about working on projects with uv, see the
-[projects concept](../concepts/projects/index.md) page and the
-[command reference](../reference/cli.md#uv).
+要了解更多关于使用 uv 进行项目工作的信息，请参阅 [项目概念](../concepts/projects/index.md) 页面和 [命令参考](../reference/cli.md#uv)。
 
-Or, read on to learn how to [build and publish your project to a package index](./package.md).
+或者，继续阅读以了解如何 [构建项目并将其发布到包索引](./package.md)。

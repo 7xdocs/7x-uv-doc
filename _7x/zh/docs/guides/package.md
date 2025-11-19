@@ -1,74 +1,60 @@
 ---
-title: Building and publishing a package
-description: A guide to using uv to build and publish Python packages to a package index, like PyPI.
+title: 构建和发布包
+description: 使用 uv 将 Python 包构建并发布到包索引（如 PyPI）的指南。
 ---
 
-# Building and publishing a package
+# 构建和发布包
 
-uv supports building Python packages into source and binary distributions via `uv build` and
-uploading them to a registry with `uv publish`.
+uv 支持通过 `uv build` 将 Python 包构建为源码分发包和二进制分发包，并使用 `uv publish` 将它们上传到注册中心。
 
-## Preparing your project for packaging
+## 为打包准备你的项目
 
-Before attempting to publish your project, you'll want to make sure it's ready to be packaged for
-distribution.
+在尝试发布你的项目之前，你需要确保它已经准备好进行分发包打包。
 
-If your project does not include a `[build-system]` definition in the `pyproject.toml`, uv will not
-build it by default. This means that your project may not be ready for distribution. Read more about
-the effect of declaring a build system in the
-[project concept](../concepts/projects/config.md#build-systems) documentation.
+如果你的项目在 `pyproject.toml` 中没有包含 `[build-system]` 定义，uv 默认不会构建它。这意味着你的项目可能尚未准备好进行分发。请阅读[项目概念](../concepts/projects/config.md#build-systems)文档中关于声明构建系统影响的更多信息。
 
 !!! note
 
-    If you have internal packages that you do not want to be published, you can mark them as
-    private:
+    如果你有内部包不希望被发布，可以将它们标记为私有：
 
     ```toml
     [project]
     classifiers = ["Private :: Do Not Upload"]
     ```
 
-    This setting makes PyPI reject your uploaded package from publishing. It does not affect
-    security or privacy settings on alternative registries.
+    此设置会使 PyPI 拒绝发布你上传的包。它不会影响其他注册中心的安全或隐私设置。
 
-    We also recommend only generating [per-project PyPI API tokens](https://pypi.org/help/#apitoken):
-    Without a PyPI token matching the project, it can't be accidentally published.
+    我们还建议仅生成[按项目的 PyPI API 令牌](https://pypi.org/help/#apitoken)：如果没有与项目匹配的 PyPI 令牌，就不会意外发布。
 
-## Building your package
+## 构建你的包
 
-Build your package with `uv build`:
+使用 `uv build` 构建你的包：
 
 ```console
 $ uv build
 ```
 
-By default, `uv build` will build the project in the current directory, and place the built
-artifacts in a `dist/` subdirectory.
+默认情况下，`uv build` 将构建当前目录中的项目，并将构建产物放置在 `dist/` 子目录中。
 
-Alternatively, `uv build <SRC>` will build the package in the specified directory, while
-`uv build --package <PACKAGE>` will build the specified package within the current workspace.
+或者，`uv build <SRC>` 将构建指定目录中的包，而 `uv build --package <PACKAGE>` 将在当前工作区内构建指定的包。
 
 !!! info
 
-    By default, `uv build` respects `tool.uv.sources` when resolving build dependencies from the
-    `build-system.requires` section of the `pyproject.toml`. When publishing a package, we recommend
-    running `uv build --no-sources` to ensure that the package builds correctly when `tool.uv.sources`
-    is disabled, as is the case when using other build tools, like [`pypa/build`](https://github.com/pypa/build).
+    默认情况下，`uv build` 在从 `pyproject.toml` 的 `build-system.requires` 部分解析构建依赖时，会遵循 `tool.uv.sources`。在发布包时，我们建议运行 `uv build --no-sources` 以确保在禁用 `tool.uv.sources` 的情况下（例如在使用其他构建工具如 [`pypa/build`](https://github.com/pypa/build) 时），包也能正确构建。
 
-## Updating your version
+## 更新版本号
 
-The `uv version` command provides conveniences for updating the version of your package before you
-publish it.
-[See the project docs for reading your package's version](./projects.md#managing-version).
+`uv version` 命令提供了在发布包之前更新包版本的便捷方法。
+[请参阅项目文档以了解如何读取包的版本](./projects.md#managing-version)。
 
-To update to an exact version, provide it as a positional argument:
+要更新到精确版本，请将其作为位置参数提供：
 
 ```console
 $ uv version 1.0.0
 hello-world 0.7.0 => 1.0.0
 ```
 
-To preview the change without updating the `pyproject.toml`, use the `--dry-run` flag:
+要在不实际更新 `pyproject.toml` 的情况下预览更改，请使用 `--dry-run` 标志：
 
 ```console
 $ uv version 2.0.0 --dry-run
@@ -77,27 +63,23 @@ $ uv version
 hello-world 1.0.0
 ```
 
-To increase the version of your package semantics, use the `--bump` option:
+要按语义增加包的版本，请使用 `--bump` 选项：
 
 ```console
 $ uv version --bump minor
 hello-world 1.2.3 => 1.3.0
 ```
 
-The `--bump` option supports the following common version components: `major`, `minor`, `patch`,
-`stable`, `alpha`, `beta`, `rc`, `post`, and `dev`. When provided more than once, the components
-will be applied in order, from largest (`major`) to smallest (`dev`).
+`--bump` 选项支持以下常见的版本组件：`major`、`minor`、`patch`、`stable`、`alpha`、`beta`、`rc`、`post` 和 `dev`。当多次提供时，这些组件将按从最大（`major`）到最小（`dev`）的顺序应用。
 
-You can optionally provide a numeric value with `--bump <component>=<value>` to set the resulting
-component explicitly:
+你可以选择使用 `--bump <component>=<value>` 提供数值来显式设置结果组件：
 
 ```console
 $ uv version --bump patch --bump dev=66463664
 hello-world 0.0.1 => 0.0.2.dev66463664
 ```
 
-To move from a stable to pre-release version, bump one of the major, minor, or patch components in
-addition to the pre-release component:
+要从稳定版本切换到预发布版本，除了预发布组件外，还需提升 major、minor 或 patch 组件之一：
 
 ```console
 $ uv version --bump patch --bump beta
@@ -106,16 +88,14 @@ $ uv version --bump major --bump alpha
 hello-world 1.3.0 => 2.0.0a1
 ```
 
-When moving from a pre-release to a new pre-release version, just bump the relevant pre-release
-component:
+当从一个预发布版本切换到新的预发布版本时，只需提升相关的预发布组件：
 
 ```console
 $ uv version --bump beta
 hello-world 1.3.0b1 => 1.3.0b2
 ```
 
-When moving from a pre-release to a stable version, the `stable` option can be used to clear the
-pre-release component:
+当从预发布版本切换到稳定版本时，可以使用 `stable` 选项来清除预发布组件：
 
 ```console
 $ uv version --bump stable
@@ -124,36 +104,27 @@ hello-world 1.3.1b2 => 1.3.1
 
 !!! info
 
-    By default, when `uv version` modifies the project it will perform a lock and sync. To
-    prevent locking and syncing, use `--frozen`, or,  to just prevent syncing, use `--no-sync`.
+    默认情况下，当 `uv version` 修改项目时，它会执行锁定和同步操作。要防止锁定和同步，请使用 `--frozen`；或者，仅防止同步，请使用 `--no-sync`。
 
-## Publishing your package
+## 发布你的包
 
 !!! note
 
-    A complete guide to publishing from GitHub Actions to PyPI can be found in the
-    [GitHub Guide](integration/github.md#publishing-to-pypi)
+    关于从 GitHub Actions 发布到 PyPI 的完整指南，请参阅 [GitHub 指南](integration/github.md#publishing-to-pypi)
 
-Publish your package with `uv publish`:
+使用 `uv publish` 发布你的包：
 
 ```console
 $ uv publish
 ```
 
-Set a PyPI token with `--token` or `UV_PUBLISH_TOKEN`, or set a username with `--username` or
-`UV_PUBLISH_USERNAME` and password with `--password` or `UV_PUBLISH_PASSWORD`. For publishing to
-PyPI from GitHub Actions or another Trusted Publisher, you don't need to set any credentials.
-Instead,
-[add a trusted publisher to the PyPI project](https://docs.pypi.org/trusted-publishers/adding-a-publisher/).
+使用 `--token` 或 `UV_PUBLISH_TOKEN` 设置 PyPI 令牌，或者使用 `--username` 或 `UV_PUBLISH_USERNAME` 设置用户名，并使用 `--password` 或 `UV_PUBLISH_PASSWORD` 设置密码。对于从 GitHub Actions 或其他可信发布者发布到 PyPI，你不需要设置任何凭据。相反，[请向 PyPI 项目添加一个可信发布者](https://docs.pypi.org/trusted-publishers/adding-a-publisher/)。
 
 !!! note
 
-    PyPI does not support publishing with username and password anymore, instead you need to
-    generate a token. Using a token is equivalent to setting `--username __token__` and using the
-    token as password.
+    PyPI 不再支持使用用户名和密码发布，你需要生成一个令牌。使用令牌相当于设置 `--username __token__` 并将令牌用作密码。
 
-If you're using a custom index through `[[tool.uv.index]]`, add `publish-url` and use
-`uv publish --index <name>`. For example:
+如果你通过 `[[tool.uv.index]]` 使用自定义索引，请添加 `publish-url` 并使用 `uv publish --index <name>`。例如：
 
 ```toml
 [[tool.uv.index]]
@@ -165,37 +136,26 @@ explicit = true
 
 !!! note
 
-    When using `uv publish --index <name>`, the `pyproject.toml` must be present, i.e., you need to
-    have a checkout step in a publish CI job.
+    当使用 `uv publish --index <name>` 时，必须存在 `pyproject.toml` 文件，即你需要在发布 CI 作业中包含检出步骤。
 
-Even though `uv publish` retries failed uploads, it can happen that publishing fails in the middle,
-with some files uploaded and some files still missing. With PyPI, you can retry the exact same
-command, existing identical files will be ignored. With other registries, use
-`--check-url <index url>` with the index URL (not the publishing URL) the packages belong to. When
-using `--index`, the index URL is used as check URL. uv will skip uploading files that are identical
-to files in the registry, and it will also handle raced parallel uploads. Note that existing files
-need to match exactly with those previously uploaded to the registry, this avoids accidentally
-publishing source distribution and wheels with different contents for the same version.
+尽管 `uv publish` 会重试失败的上传，但有时发布可能会在中间失败，部分文件已上传而部分文件仍然缺失。对于 PyPI，你可以重试完全相同的命令，已存在的相同文件将被忽略。对于其他注册中心，请使用 `--check-url <index url>` 并指定包所属的索引 URL（不是发布 URL）。当使用 `--index` 时，索引 URL 被用作检查 URL。uv 将跳过上传与注册中心中文件相同的文件，并且它也会处理竞态条件的并行上传。请注意，现有文件需要与之前上传到注册中心的文件完全匹配，这可以避免意外发布相同版本但内容不同的源码分发包和 wheel 包。
 
-## Installing your package
+## 安装你的包
 
-Test that the package can be installed and imported with `uv run`:
+使用 `uv run` 测试包是否可以安装和导入：
 
 ```console
 $ uv run --with <PACKAGE> --no-project -- python -c "import <PACKAGE>"
 ```
 
-The `--no-project` flag is used to avoid installing the package from your local project directory.
+`--no-project` 标志用于避免从本地项目目录安装包。
 
 !!! tip
 
-    If you have recently installed the package, you may need to include the
-    `--refresh-package <PACKAGE>` option to avoid using a cached version of the package.
+    如果你最近安装了该包，可能需要包含 `--refresh-package <PACKAGE>` 选项以避免使用包的缓存版本。
 
-## Next steps
+## 后续步骤
 
-To learn more about publishing packages, check out the
-[PyPA guides](https://packaging.python.org/en/latest/guides/section-build-and-publish/) on building
-and publishing.
+要了解更多关于发布包的信息，请查看 [PyPA 指南](https://packaging.python.org/en/latest/guides/section-build-and-publish/)中关于构建和发布的部分。
 
-Or, read on for [guides](./integration/index.md) on integrating uv with other software.
+或者，继续阅读关于[将 uv 与其他软件集成](./integration/index.md)的指南。

@@ -1,20 +1,18 @@
 ---
-title: Using tools
+title: 使用工具
 description:
-  A guide to using uv to run tools published as Python packages, including one-off invocations with
-  uvx, requesting specific tool versions, installing tools, upgrading tools, and more.
+  关于使用 uv 运行作为 Python 包发布的工具的指南，包括使用 uvx 进行一次性调用、请求特定工具版本、安装工具、升级工具等。
 ---
 
-# Using tools
+# 使用工具
 
-Many Python packages provide applications that can be used as tools. uv has specialized support for
-easily invoking and installing tools.
+许多 Python 包提供了可用作工具的应用程序。uv 具有专门的支持，可以轻松调用和安装这些工具。
 
-## Running tools
+## 运行工具
 
-The `uvx` command invokes a tool without installing it.
+`uvx` 命令无需安装即可调用工具。
 
-For example, to run `ruff`:
+例如，要运行 `ruff`：
 
 ```console
 $ uvx ruff
@@ -22,15 +20,15 @@ $ uvx ruff
 
 !!! note
 
-    This is exactly equivalent to:
+    这完全等同于：
 
     ```console
     $ uv tool run ruff
     ```
 
-    `uvx` is provided as an alias for convenience.
+    为方便起见，提供了 `uvx` 作为别名。
 
-Arguments can be provided after the tool name:
+参数可以在工具名称后提供：
 
 ```console
 $ uvx pycowsay hello from uv
@@ -46,256 +44,230 @@ $ uvx pycowsay hello from uv
 
 ```
 
-Tools are installed into temporary, isolated environments when using `uvx`.
+使用 `uvx` 时，工具会被安装到临时的、隔离的环境中。
 
 !!! note
 
-    If you are running a tool in a [_project_](../concepts/projects/index.md) and the tool requires that
-    your project is installed, e.g., when using `pytest` or `mypy`, you'll want to use
-    [`uv run`](./projects.md#running-commands) instead of `uvx`. Otherwise, the tool will be run in
-    a virtual environment that is isolated from your project.
+    如果您在 [_项目_](../concepts/projects/index.md) 中运行工具，并且该工具要求安装您的项目（例如，使用 `pytest` 或 `mypy` 时），您应该使用 [`uv run`](./projects.md#running-commands) 而不是 `uvx`。否则，该工具将在与您的项目隔离的虚拟环境中运行。
 
-    If your project has a flat structure, e.g., instead of using a `src` directory for modules,
-    the project itself does not need to be installed and `uvx` is fine. In this case, using
-    `uv run` is only beneficial if you want to pin the version of the tool in the project's
-    dependencies.
+    如果您的项目结构是扁平的（例如，没有使用 `src` 目录来存放模块），那么项目本身不需要安装，使用 `uvx` 即可。在这种情况下，只有当您希望在项目的依赖项中固定工具的版本时，使用 `uv run` 才有额外的好处。
 
-## Commands with different package names
+## 命令与包名不同的情况
 
-When `uvx ruff` is invoked, uv installs the `ruff` package which provides the `ruff` command.
-However, sometimes the package and command names differ.
+当调用 `uvx ruff` 时，uv 会安装提供 `ruff` 命令的 `ruff` 包。但有时包的名称和命令的名称并不相同。
 
-The `--from` option can be used to invoke a command from a specific package, e.g., `http` which is
-provided by `httpie`:
+可以使用 `--from` 选项来调用特定包中的命令，例如，由 `httpie` 包提供的 `http` 命令：
 
 ```console
 $ uvx --from httpie http
 ```
 
-## Requesting specific versions
+## 请求特定版本
 
-To run a tool at a specific version, use `command@<version>`:
+要运行特定版本的工具，请使用 `command@<version>`：
 
 ```console
 $ uvx ruff@0.3.0 check
 ```
 
-To run a tool at the latest version, use `command@latest`:
+要运行工具的最新版本，请使用 `command@latest`：
 
 ```console
 $ uvx ruff@latest check
 ```
 
-The `--from` option can also be used to specify package versions, as above:
+`--from` 选项也可用于指定包版本，如上所述：
 
 ```console
 $ uvx --from 'ruff==0.3.0' ruff check
 ```
 
-Or, to constrain to a range of versions:
+或者，也可以约束版本范围：
 
 ```console
 $ uvx --from 'ruff>0.2.0,<0.3.0' ruff check
 ```
 
-Note the `@` syntax cannot be used for anything other than an exact version.
+请注意，`@` 语法不能用于除精确版本之外的任何其他用途。
 
-## Requesting extras
+## 请求附加功能
 
-The `--from` option can be used to run a tool with extras:
+可以使用 `--from` 选项来运行带有附加功能的工具：
 
 ```console
 $ uvx --from 'mypy[faster-cache,reports]' mypy --xml-report mypy_report
 ```
 
-This can also be combined with version selection:
+这也可以与版本选择结合使用：
 
 ```console
 $ uvx --from 'mypy[faster-cache,reports]==1.13.0' mypy --xml-report mypy_report
 ```
 
-## Requesting different sources
+## 请求不同的来源
 
-The `--from` option can also be used to install from alternative sources.
+`--from` 选项也可用于从替代来源安装。
 
-For example, to pull from git:
+例如，从 git 拉取：
 
 ```console
 $ uvx --from git+https://github.com/httpie/cli httpie
 ```
 
-You can also pull the latest commit from a specific named branch:
+您也可以从特定的命名分支拉取最新提交：
 
 ```console
 $ uvx --from git+https://github.com/httpie/cli@master httpie
 ```
 
-Or pull a specific tag:
+或者拉取特定的标签：
 
 ```console
 $ uvx --from git+https://github.com/httpie/cli@3.2.4 httpie
 ```
 
-Or even a specific commit:
+甚至是特定的提交：
 
 ```console
 $ uvx --from git+https://github.com/httpie/cli@2843b87 httpie
 ```
 
-## Commands with plugins
+## 带有插件的命令
 
-Additional dependencies can be included, e.g., to include `mkdocs-material` when running `mkdocs`:
+可以包含额外的依赖项，例如，在运行 `mkdocs` 时包含 `mkdocs-material`：
 
 ```console
 $ uvx --with mkdocs-material mkdocs --help
 ```
 
-## Installing tools
+## 安装工具
 
-If a tool is used often, it is useful to install it to a persistent environment and add it to the
-`PATH` instead of invoking `uvx` repeatedly.
+如果一个工具经常使用，将其安装到持久环境中并添加到 `PATH` 中，而不是重复调用 `uvx`，会很有用。
 
 !!! tip
 
-    `uvx` is a convenient alias for `uv tool run`. All of the other commands for interacting with
-    tools require the full `uv tool` prefix.
+    `uvx` 是 `uv tool run` 的一个便捷别名。所有其他与工具交互的命令都需要完整的 `uv tool` 前缀。
 
-To install `ruff`:
+要安装 `ruff`：
 
 ```console
 $ uv tool install ruff
 ```
 
-When a tool is installed, its executables are placed in a `bin` directory in the `PATH` which allows
-the tool to be run without uv. If it's not on the `PATH`, a warning will be displayed and
-`uv tool update-shell` can be used to add it to the `PATH`.
+当工具被安装后，其可执行文件会被放置在一个位于 `PATH` 中的 `bin` 目录下，这使得无需 uv 即可运行该工具。如果它不在 `PATH` 中，将会显示警告，并且可以使用 `uv tool update-shell` 将其添加到 `PATH` 中。
 
-After installing `ruff`, it should be available:
+安装 `ruff` 后，它应该就可以使用了：
 
 ```console
 $ ruff --version
 ```
 
-Unlike `uv pip install`, installing a tool does not make its modules available in the current
-environment. For example, the following command will fail:
+与 `uv pip install` 不同，安装工具并不会使其模块在当前环境中可用。例如，以下命令将会失败：
 
 ```console
 $ python -c "import ruff"
 ```
 
-This isolation is important for reducing interactions and conflicts between dependencies of tools,
-scripts, and projects.
+这种隔离对于减少工具、脚本和项目的依赖项之间的交互和冲突非常重要。
 
-Unlike `uvx`, `uv tool install` operates on a _package_ and will install all executables provided by
-the tool.
+与 `uvx` 不同，`uv tool install` 操作的是一个 _包_，并且会安装该工具提供的所有可执行文件。
 
-For example, the following will install the `http`, `https`, and `httpie` executables:
+例如，以下命令将安装 `http`、`https` 和 `httpie` 可执行文件：
 
 ```console
 $ uv tool install httpie
 ```
 
-Additionally, package versions can be included without `--from`:
+此外，可以在不使用 `--from` 的情况下包含包版本：
 
 ```console
 $ uv tool install 'httpie>0.1.0'
 ```
 
-And, similarly, for package sources:
+同样，对于包来源也是如此：
 
 ```console
 $ uv tool install git+https://github.com/httpie/cli
 ```
 
-As with `uvx`, installations can include additional packages:
+与 `uvx` 一样，安装可以包含额外的包：
 
 ```console
 $ uv tool install mkdocs --with mkdocs-material
 ```
 
-Multiple related executables can be installed together in the same tool environment, using the
-`--with-executables-from` flag. For example, the following will install the executables from
-`ansible`, plus those ones provided by `ansible-core` and `ansible-lint`:
+可以使用 `--with-executables-from` 标志将多个相关的可执行文件一起安装到同一个工具环境中。例如，以下命令将安装来自 `ansible` 的可执行文件，以及由 `ansible-core` 和 `ansible-lint` 提供的可执行文件：
 
 ```console
 $ uv tool install --with-executables-from ansible-core,ansible-lint ansible
 ```
 
-## Upgrading tools
+## 升级工具
 
-To upgrade a tool, use `uv tool upgrade`:
+要升级工具，请使用 `uv tool upgrade`：
 
 ```console
 $ uv tool upgrade ruff
 ```
 
-Tool upgrades will respect the version constraints provided when installing the tool. For example,
-`uv tool install ruff >=0.3,<0.4` followed by `uv tool upgrade ruff` will upgrade Ruff to the latest
-version in the range `>=0.3,<0.4`.
+工具升级将遵循安装工具时提供的版本约束。例如，`uv tool install ruff >=0.3,<0.4` 后跟 `uv tool upgrade ruff` 将会将 Ruff 升级到 `>=0.3,<0.4` 范围内的最新版本。
 
-To instead replace the version constraints, re-install the tool with `uv tool install`:
+要替换版本约束，请使用 `uv tool install` 重新安装工具：
 
 ```console
 $ uv tool install ruff>=0.4
 ```
 
-To instead upgrade all tools:
+要升级所有工具：
 
 ```console
 $ uv tool upgrade --all
 ```
 
-## Requesting Python versions
+## 请求 Python 版本
 
-By default, uv will use your default Python interpreter (the first it finds) when running,
-installing, or upgrading tools. You can specify the Python interpreter to use with the `--python`
-option.
+默认情况下，uv 在运行、安装或升级工具时将使用您的默认 Python 解释器（它找到的第一个）。您可以使用 `--python` 选项指定要使用的 Python 解释器。
 
-For example, to request a specific Python version when running a tool:
+例如，在运行工具时请求特定的 Python 版本：
 
 ```console
 $ uvx --python 3.10 ruff
 ```
 
-Or, when installing a tool:
+或者，在安装工具时：
 
 ```console
 $ uv tool install --python 3.10 ruff
 ```
 
-Or, when upgrading a tool:
+或者，在升级工具时：
 
 ```console
 $ uv tool upgrade --python 3.10 ruff
 ```
 
-For more details on requesting Python versions, see the
-[Python version](../concepts/python-versions.md#requesting-a-version) concept page.
+有关请求 Python 版本的更多详细信息，请参阅 [Python 版本](../concepts/python-versions.md#requesting-a-version) 概念页面。
 
-## Legacy Windows Scripts
+## 旧版 Windows 脚本
 
-Tools also support running
-[legacy setuptools scripts](https://packaging.python.org/en/latest/guides/distributing-packages-using-setuptools/#scripts).
-These scripts are available via `$(uv tool dir)\<tool-name>\Scripts` when installed.
+工具还支持运行 [旧版 setuptools 脚本](https://packaging.python.org/en/latest/guides/distributing-packages-using-setuptools/#scripts)。这些脚本在安装后可以通过 `$(uv tool dir)\<tool-name>\Scripts` 使用。
 
-Currently only legacy scripts with the `.ps1`, `.cmd`, and `.bat` extensions are supported.
+目前仅支持具有 `.ps1`、`.cmd` 和 `.bat` 扩展名的旧版脚本。
 
-For example, below is an example running a Command Prompt script.
+例如，下面是一个运行命令提示符脚本的示例。
 
 ```console
 $ uv tool run --from nuitka==2.6.7 nuitka.cmd --version
 ```
 
-In addition, you don't need to specify the extension. `uvx` will automatically look for files ending
-in `.ps1`, `.cmd`, and `.bat` in that order of execution on your behalf.
+此外，您不需要指定扩展名。`uvx` 将自动按执行顺序（`.ps1`、`.cmd`、`.bat`）为您查找以这些扩展名结尾的文件。
 
 ```console
 $ uv tool run --from nuitka==2.6.7 nuitka --version
 ```
 
-## Next steps
+## 下一步
 
-To learn more about managing tools with uv, see the [Tools concept](../concepts/tools.md) page and
-the [command reference](../reference/cli.md#uv-tool).
+要了解有关使用 uv 管理工具的更多信息，请参阅 [工具概念](../concepts/tools.md) 页面和 [命令参考](../reference/cli.md#uv-tool)。
 
-Or, read on to learn how to [work on projects](./projects.md).
+或者，继续阅读以了解如何 [处理项目](./projects.md)。

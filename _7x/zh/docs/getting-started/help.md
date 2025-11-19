@@ -1,86 +1,78 @@
-# Getting help
+# 获取帮助
 
-## Help menus
+## 帮助菜单
 
-The `--help` flag can be used to view the help menu for a command, e.g., for `uv`:
+可以使用 `--help` 标志来查看命令的帮助菜单，例如，对于 `uv` 命令：
 
 ```console
 $ uv --help
 ```
 
-To view the help menu for a specific command, e.g., for `uv init`:
+要查看特定命令的帮助菜单，例如，对于 `uv init` 命令：
 
 ```console
 $ uv init --help
 ```
 
-When using the `--help` flag, uv displays a condensed help menu. To view a longer help menu for a
-command, use `uv help`:
+当使用 `--help` 标志时，uv 会显示一个简明的帮助菜单。要查看命令的详细帮助菜单，请使用 `uv help`：
 
 ```console
 $ uv help
 ```
 
-To view the long help menu for a specific command, e.g., for `uv init`:
+要查看特定命令的详细帮助菜单，例如，对于 `uv init` 命令：
 
 ```console
 $ uv help init
 ```
 
-When using the long help menu, uv will attempt to use `less` or `more` to "page" the output so it is
-not all displayed at once. To exit the pager, press `q`.
+当使用详细帮助菜单时，uv 会尝试使用 `less` 或 `more` 来对输出进行"分页"，这样内容就不会一次性全部显示。要退出分页器，请按 `q` 键。
 
-## Displaying verbose output
+## 显示详细输出
 
-The `-v` flag can be used to display verbose output for a command, e.g., for `uv sync`:
+`-v` 标志可用于显示命令的详细输出，例如，对于 `uv sync` 命令：
 
 ```console
 $ uv sync -v
 ```
 
-The `-v` flag can be repeated to increase verbosity, e.g.:
+`-v` 标志可以重复使用以增加详细程度，例如：
 
 ```console
 $ uv sync -vv
 ```
 
-Often, the verbose output will include additional information about why uv is behaving in a certain
-way.
+通常，详细输出会包含关于 uv 为何以某种方式行事的额外信息。
 
-## Viewing the version
+## 查看版本
 
-When seeking help, it's important to determine the version of uv that you're using — sometimes the
-problem is already solved in a newer version.
+在寻求帮助时，确定您正在使用的 uv 版本非常重要——有时问题在更新的版本中已经得到解决。
 
-To check the installed version:
+要检查已安装的版本：
 
 ```console
 $ uv self version
 ```
 
-The following are also valid:
+以下命令同样有效：
 
 ```console
-$ uv --version      # Same output as `uv self version`
-$ uv -V             # Will not include the build commit and date
+$ uv --version      # 输出与 `uv self version` 相同
+$ uv -V             # 不包含构建提交和日期信息
 ```
 
 !!! note
 
-    Before uv 0.7.0, `uv version` was used instead of `uv self version`.
+    在 uv 0.7.0 版本之前，使用的是 `uv version` 而不是 `uv self version`。
 
-## Troubleshooting issues
+## 问题排查
 
-The reference documentation contains a
-[troubleshooting guide](../reference/troubleshooting/index.md) for common issues.
+参考文档中包含了一个针对常见问题的[问题排查指南](../reference/troubleshooting/index.md)。
 
-## Open an issue on GitHub
+## 在 GitHub 上提交问题
 
-The [issue tracker](https://github.com/astral-sh/uv/issues) on GitHub is a good place to report bugs
-and request features. Make sure to search for similar issues first, as it is common for someone else
-to encounter the same problem.
+GitHub 上的[问题跟踪器](https://github.com/astral-sh/uv/issues)是报告错误和请求功能的好地方。请确保先搜索类似的问题，因为其他人遇到相同问题的情况很常见。
 
-## Chat on Discord
+## 在 Discord 上交流
 
-Astral has a [Discord server](https://discord.com/invite/astral-sh), which is a great place to ask
-questions, learn more about uv, and engage with other community members.
+Astral 有一个 [Discord 服务器](https://discord.com/invite/astral-sh)，这是提问、了解更多关于 uv 的信息以及与其他社区成员互动的好地方。
