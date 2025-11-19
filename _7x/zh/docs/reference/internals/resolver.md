@@ -1,94 +1,50 @@
-# Resolver internals
+# Resolver 内部机制
 
 !!! tip
 
-    This document focuses on the internal workings of uv's resolver. For using uv, see the
-    [resolution concept](../../concepts/resolution.md) documentation.
+    本文档重点介绍 uv 解析器的内部工作原理。关于如何使用 uv，请参阅[解析概念](../../concepts/resolution.md)文档。
 
-## Resolver
+## 解析器
 
-As defined in a textbook, resolution, or finding a set of version to install from a given set of
-requirements, is equivalent to the
-[SAT problem](https://en.wikipedia.org/wiki/Boolean_satisfiability_problem) and thereby NP-complete:
-in the worst case you have to try all possible combinations of all versions of all packages and
-there are no general, fast algorithms. In practice, this is misleading for a number of reasons:
+根据教科书定义，解析，即从给定的一组需求中找出一组要安装的版本，等价于[SAT 问题](https://en.wikipedia.org/wiki/Boolean_satisfiability_problem)，因此是 NP 完全问题：在最坏的情况下，你必须尝试所有包的所有版本的所有可能组合，并且没有通用的快速算法。但在实践中，这种说法具有误导性，原因如下：
 
-- The slowest part of resolution in uv is loading package and version metadata, even if it's cached.
-- There are many possible solutions, but some are preferable to others. For example, we generally
-  prefer using the latest version of packages.
-- Package dependencies are complex, e.g., there are contiguous versions ranges — not arbitrary
-  boolean inclusion/exclusions of versions, adjacent releases often have the same or similar
-  requirements, etc.
-- For most resolutions, the resolver doesn't need to backtrack, picking versions iteratively is
-  sufficient. If there are version preferences from a previous resolution, barely any work needs to
-  be done.
-- When resolution fails, more information is needed than a message that there is no solution (as is
-  seen in SAT solvers). Instead, the resolver should produce an understandable error trace that
-  states which packages are involved in away to allows a user to remove the conflict.
-- The most important heuristic for performance and user experience is determining the order in which
-  decisions are made through prioritization.
+- uv 中解析最慢的部分是加载包和版本元数据，即使它被缓存了。
+- 存在许多可能的解决方案，但有些方案优于其他方案。例如，我们通常倾向于使用包的最新版本。
+- 包依赖关系很复杂，例如，存在连续的版本范围——而不是任意的布尔包含/排除版本，相邻的版本通常具有相同或相似的要求，等等。
+- 对于大多数解析，解析器不需要回溯，迭代地选择版本就足够了。如果之前的解析提供了版本偏好，那么几乎不需要做任何工作。
+- 当解析失败时，需要的信息不仅仅是"无解"的消息（就像在 SAT 求解器中看到的那样）。相反，解析器应该生成一个可理解的错误跟踪，说明涉及哪些包，以便允许用户消除冲突。
+- 对于性能和用户体验而言，最重要的启发式方法是通过优先级确定决策的顺序。
 
-uv uses [pubgrub-rs](https://github.com/pubgrub-rs/pubgrub), the Rust implementation of
-[PubGrub](https://nex3.medium.com/pubgrub-2fb6470504f), an incremental version solver. PubGrub in uv
-works in the following steps:
+uv 使用 [pubgrub-rs](https://github.com/pubgrub-rs/pubgrub-rs)（[PubGrub](https://nex3.medium.com/pubgrub-2fb6470504f) 的 Rust 实现），这是一个增量版本求解器。PubGrub 在 uv 中的工作步骤如下：
 
-- Start with a partial solution that declares which packages versions have been selected and which
-  are undecided. Initially, only a virtual root package is decided.
-- The highest priority package is selected from the undecided packages. Roughly, packages with URLs
-  (including file, git, etc.) have the highest priority, then those with more exact specifiers (such
-  as `==`), then those with less strict specifiers. Inside each category, packages are ordered by
-  when they were first seen (i.e. order in a file), making the resolution deterministic.
-- A version is picked for the selected package. The version must works with all specifiers from the
-  requirements in the partial solution and must not be previously marked as incompatible. The
-  resolver prefers versions from a lockfile (`uv.lock` or `-o requirements.txt`) and those installed
-  in the current environment. Versions are checked from highest to lowest (unless using an
-  alternative [resolution strategy](../../concepts/resolution.md#resolution-strategy)).
-- All requirements of the selected package version are added to the undecided packages. uv
-  prefetches their metadata in the background to improve performance.
-- The process is either repeated with the next package unless a conflict is detected, in which the
-  resolver will backtrack. For example, the partial solution contains, among other packages, `a 2`
-  then `b 2` with the requirements `a 2 -> c 1` and `b 2 -> c 2`. No compatible version of `c` can
-  be found. PubGrub can determine this was caused by `a 2` and `b 2` and add the incompatibility
-  `{a 2, b 2}`, meaning that when either is picked, the other cannot be selected. The partial
-  solution is restored to `a 2` with the tracked incompatibility and the resolver attempts to pick a
-  new version for `b`.
+- 从一个声明了哪些包版本已被选中、哪些尚未决定的偏解开始。最初，只有虚拟的根包是已决定的。
+- 从尚未决定的包中选择优先级最高的包。粗略地说，带有 URL（包括文件、git 等）的包具有最高优先级，然后是具有更严格说明符（如 `==`）的包，再然后是限制较少的包。在每个类别内部，包按首次出现（例如文件中的顺序）排序，使得解析是确定性的。
+- 为选定的包挑选一个版本。该版本必须与偏解中所有需求的说明符兼容，并且不能先前被标记为不兼容。解析器优先选择来自锁文件（`uv.lock` 或 `-o requirements.txt`）的版本以及当前环境中已安装的版本。版本从高到低检查（除非使用替代的[解析策略](../../concepts/resolution.md#resolution-strategy)）。
+- 将选定包版本的所有需求添加到未决定的包中。uv 在后台预取它们的元数据以提高性能。
+- 除非检测到冲突（此时解析器将回溯），否则对下一个包重复此过程。例如，偏解中包含（除其他包外）`a 2` 和 `b 2`，其需求分别为 `a 2 -> c 1` 和 `b 2 -> c 2`。找不到兼容的 `c` 版本。PubGrub 可以确定这是由 `a 2` 和 `b 2` 引起的，并添加不兼容性 `{a 2, b 2}`，这意味着当选择了其中一个时，就不能选择另一个。偏解恢复到 `a 2` 并记录不兼容性，然后解析器尝试为 `b` 选取一个新版本。
 
-Eventually, the resolver either picks compatible versions for all packages (a successful resolution)
-or there is an incompatibility including the virtual "root" package which defines the versions
-requested by the user. An incompatibility with the root package indicates that whatever versions of
-the root dependencies and their transitive dependencies are picked, there will always be a conflict.
-From the incompatibilities tracked in PubGrub, an error message is constructed to enumerate the
-involved packages.
+最终，解析器要么为所有包选择了兼容版本（解析成功），要么存在一个涉及虚拟"根"包的不兼容性，该根包定义了用户请求的版本。与根包的不兼容性表明，无论选择哪个版本的根依赖项及其传递依赖项，总会存在冲突。根据 PubGrub 中跟踪的不兼容性，构建错误消息以枚举涉及的包。
 
 !!! tip
 
-    For more details on the PubGrub algorithm, see [Internals of the PubGrub
-    algorithm](https://pubgrub-rs-guide.pages.dev/internals/intro).
+    有关 PubGrub 算法的更多详细信息，请参阅 [PubGrub 算法内部机制](https://pubgrub-rs-guide.pages.dev/internals/intro)。
 
-In addition to PubGrub's base algorithm, we also use a heuristic that backtracks and switches the
-order of two packages if they have been conflicting too much.
+除了 PubGrub 的基础算法之外，我们还使用一种启发式方法，如果两个包冲突过多，则回溯并切换它们的顺序。
 
-## Forking
+## 分叉
 
-Python resolvers historically didn't support backtracking, and even with backtracking, resolution
-was usually limited to single environment, which one specific architecture, operating system, Python
-version, and Python implementation. Some packages use contradictory requirements for different
-environments, for example:
+历史上的 Python 解析器不支持回溯，即使支持回溯，解析通常也仅限于单一环境，即特定的架构、操作系统、Python 版本和 Python 实现。有些包针对不同环境使用相互矛盾的要求，例如：
 
 ```
 numpy>=2,<3 ; python_version >= "3.11"
 numpy>=1.16,<2 ; python_version < "3.11"
 ```
 
-Since Python only allows one version of each package, a naive resolver would error here. Inspired by
-[Poetry](https://github.com/python-poetry/poetry), uv uses a forking resolver: whenever there are
-multiple requirements for a package with different markers, the resolution is split.
+由于 Python 只允许每个包有一个版本，一个简单的解析器会在这里出错。受 [Poetry](https://github.com/python-poetry/poetry) 启发，uv 使用了分叉解析器：每当一个包有多个带有不同标记的需求时，解析就会分裂。
 
-In the above example, the partial solution would be split into two resolutions, one for
-`python_version >= "3.11"` and one for `python_version < "3.11"`.
+在上面的例子中，偏解将分裂为两个解析：一个针对 `python_version >= "3.11"`，另一个针对 `python_version < "3.11"`。
 
-If markers overlap or are missing a part of the marker space, the resolver splits additional times —
-there can be many forks per package. For example, given:
+如果标记重叠或缺少部分标记空间，解析器会进行额外的分裂——每个包可能有很多分叉。例如，给定：
 
 ```
 flask > 1 ; sys_platform == 'darwin'
@@ -96,241 +52,85 @@ flask > 2 ; sys_platform == 'win32'
 flask
 ```
 
-A fork would be created for `sys_platform == 'darwin'`, for `sys_platform == 'win32'`, and for
-`sys_platform != 'darwin' and sys_platform != 'win32'`.
+将会为 `sys_platform == 'darwin'`、`sys_platform == 'win32'` 以及 `sys_platform != 'darwin' and sys_platform != 'win32'` 创建分叉。
 
-Forks can be nested, e.g., each fork is dependent on any previous forks that occurred. Forks with
-identical packages are merged to keep the number of forks low.
+分叉可以嵌套，例如，每个分叉都依赖于任何先前发生的分叉。具有相同包的分叉会被合并，以保持分叉数量较少。
 
 !!! tip
 
-    Forking can be observed in the logs of `uv lock -v` by looking for
-    `Splitting resolution on ...`, `Solving split ... (requires-python: ...)` and `Split ... resolution
-    took ...`.
+    可以通过在 `uv lock -v` 的日志中查找 `Splitting resolution on ...`、`Solving split ... (requires-python: ...)` 和 `Split ... resolution took ...` 来观察分叉过程。
 
-One difficulty in a forking resolver is that where splits occur is dependent on the order packages
-are seen, which is in turn dependent on the preferences, e.g., from `uv.lock`. So it is possible for
-the resolver to solve the requirements with specific forks, write this to the lockfile, and when the
-resolver is invoked again, a different solution is found because the preferences result in different
-fork points. To avoid this, the `resolution-markers` of each fork and each package that diverges
-between forks is written to the lockfile. When performing a new resolution, the forks from the
-lockfile are used to ensure the resolution is stable. When requirements change, new forks may be
-added to the saved forks.
+分叉解析器的一个难点在于，分裂发生的位置取决于看到包的顺序，而包的顺序又取决于偏好（例如来自 `uv.lock`）。因此，解析器有可能使用特定的分叉解决了需求，并将其写入锁文件，而当再次调用解析器时，由于偏好导致不同的分叉点，从而找到了不同的解决方案。为了避免这种情况，每个分叉的 `resolution-markers` 以及分叉之间产生差异的每个包的信息都会被写入锁文件。在执行新的解析时，使用锁文件中的分叉来确保解析的稳定性。当需求发生变化时，可能会向保存的分叉中添加新的分叉。
 
-## Wheel tags
+## Wheel 标签
 
-While uv's resolution is universal with respect to environment markers, this doesn't extend to wheel
-tags. Wheel tags can encode the Python version, Python implementation, operating system, and
-architecture. For example, `torch-2.4.0-cp312-cp312-manylinux2014_aarch64.whl` is only compatible
-with CPython 3.12 on arm64 Linux with `glibc>=2.17` (per the `manylinux2014` policy), while
-`tqdm-4.66.4-py3-none-any.whl` works with all Python 3 versions and interpreters on any operating
-system and architecture. Most projects have a universally compatible source distribution that can be
-used when attempted to install a package that has no compatible wheel, but some packages, such as
-`torch`, don't publish a source distribution. In this case an installation on, e.g., Python 3.13, an
-uncommon operating system, or architecture, will fail and complain that there is no matching wheel.
+虽然 uv 的解析在环境标记方面是通用的，但这并不扩展到 wheel 标签。Wheel 标签可以编码 Python 版本、Python 实现、操作系统和架构。例如，`torch-2.4.0-cp312-cp312-manylinux2014_aarch64.whl` 仅兼容 CPython 3.12 在 arm64 Linux 且 `glibc>=2.17`（根据 `manylinux2014` 策略）的环境，而 `tqdm-4.66.4-py3-none-any.whl` 适用于所有 Python 3 版本和解释器，以及任何操作系统和架构。大多数项目都有一个普遍兼容的源码发行版，当尝试安装一个没有兼容 wheel 的包时可以使用它，但有些包，如 `torch`，不发布源码发行版。在这种情况下，在例如 Python 3.13、不常见的操作系统或架构上安装将会失败，并提示没有匹配的 wheel。
 
-## Marker and wheel tag filtering
+## 标记和 Wheel 标签过滤
 
-In every fork, we know what markers are possible. In non-universal resolution, we know their exact
-values. In universal mode, we know at least a constraint for the python requirement, e.g.,
-`requires-python = ">=3.12"` means that `importlib_metadata; python_version < "3.10"` can be
-discarded because it can never be installed. If additionally `tool.uv.environments` is set, we can
-filter out requirements with markers disjoint with those environments. Inside each fork, we can
-additionally filter by the fork markers.
+在每个分叉中，我们知道哪些标记是可能的。在非通用解析中，我们知道它们的确切值。在通用模式下，我们至少知道 Python 需求的约束，例如，`requires-python = ">=3.12"` 意味着 `importlib_metadata; python_version < "3.10"` 可以被丢弃，因为它永远无法安装。如果还设置了 `tool.uv.environments`，我们可以过滤掉标记与这些环境不相交的需求。在每个分叉内部，我们还可以根据分叉标记进行额外过滤。
 
-There is some redundancy in the marker expressions, where the value of one marker field implies the
-value of another field. Internally, we normalize `python_version` and `python_full_version` as well
-as known values of `platform_system` and `sys_platform` to a shared canonical representation, so
-they can match against each other.
+标记表达式存在一些冗余，其中一个标记字段的值暗示了另一个字段的值。在内部，我们将 `python_version` 和 `python_full_version` 以及 `platform_system` 和 `sys_platform` 的已知值标准化为共享的规范表示，以便它们可以相互匹配。
 
-When we selected a version with a local tag (e.g.,`1.2.3+localtag`) and the wheels don't cover
-support for Windows, Linux and macOS, and there is a base version without tag (e.g.,`1.2.3`) with
-support for a missing platform, we fork trying to extend the platform support by using both the
-version with local tag and without local tag depending on the platform. This helps with packages
-that use the local tag for different hardware accelerators such as torch. While there is no 1:1
-mapping between wheel tags and markers, we can do a mapping for well-known platforms, including
-Windows, Linux and macOS.
+当我们选择了一个带有本地标签的版本（例如 `1.2.3+localtag`）并且其 wheel 不支持 Windows、Linux 和 macOS，而存在一个没有标签的基础版本（例如 `1.2.3`）支持缺失的平台时，我们会进行分叉，尝试根据平台同时使用带本地标签和不带本地标签的版本来扩展平台支持。这有助于处理使用本地标签表示不同硬件加速器的包，如 torch。虽然 wheel 标签和标记之间没有一对一的映射，但我们可以为已知平台（包括 Windows、Linux 和 macOS）进行映射。
 
-## Metadata consistency
+## 元数据一致性
 
-uv, similar to poetry, requires that wheels of a single version of a package in a specific index
-have the same dependencies (`Requires-Dist` in `METADATA`), including wheels build from a source
-distribution. More generally, uv assumes that each wheel has the same `METADATA` file in its
-dist-info directory.
+uv，类似于 poetry，要求特定索引中单个包版本的所有 wheel 具有相同的依赖关系（`METADATA` 中的 `Requires-Dist`），包括从源码发行版构建的 wheel。更一般地说，uv 假设每个 wheel 在其 dist-info 目录中具有相同的 `METADATA` 文件。
 
-numpy 2.3.2 for example has 73 wheels. Without this assumption, uv would have to make 73 network
-requests to fetch its metadata, instead of a single one. Another problem we would have without
-metadata consistency is the lack of a 1:1 mapping between markers and wheel tags. Wheel tags can
-include the glibc version while the PEP 508 markers cannot represent it. If wheels had different
-metadata, a universal resolver would have to track two dimensions simultaneously, PEP 508 markers
-and wheel tags. This would increase complexity a lot, and the correspondence between the two is not
-properly specified. PEP 508 markers have been introduced specifically to allow different
-dependencies between different platform, i.e. to have a single dependency declaration for all
-wheels, such as `project.[optional-]dependencies`. If the markers are not sufficient, we should
-extend PEP 508 markers instead of using a parallel system of wheel tags.
+例如，numpy 2.3.2 有 73 个 wheel。如果没有这个假设，uv 将不得不发起 73 次网络请求来获取其元数据，而不是仅仅一次。没有元数据一致性我们会遇到的另一个问题是标记和 wheel 标签之间缺乏一对一的映射。Wheel 标签可以包含 glibc 版本，而 PEP 508 标记无法表示它。如果 wheel 具有不同的元数据，通用解析器将不得不同时跟踪两个维度：PEP 508 标记和 wheel 标签。这将大大增加复杂性，并且两者之间的对应关系没有明确规定。引入 PEP 508 标记 specifically 是为了允许不同平台之间的依赖关系不同，即对所有 wheel 使用单一的依赖声明，例如 `project.[optional-]dependencies`。如果标记不够用，我们应该扩展 PEP 508 标记，而不是使用并行的 wheel 标签系统。
 
-Another aspect of metadata consistency is that a source distribution must build into a wheel with
-the same metadata as the wheels, or if there are no wheels, into the same metadata each time. If
-this assumption is violated, sound dependency locking becomes impossible: Consider a package A has a
-source distribution. During resolution, we build A v1 and obtain the dependencies `B>=2,<3`. We lock
-`A==1` and `B==2`. When installing the lockfile on the target machine, we build again and obtain
-dependencies `B>=3,<4` and `C>=1,<2`. The lockfile fails to install: Due to the changed constraints,
-the locked version of `B` is incompatible, and there's no locked candidate for `C`. Re-resolving
-after this would both be a reproducibility problem (the lockfile is effectively ignored) and a
-security concern (`C` has not been reviewed, neither was `B==3`). It's possible to fail on
-installation if that happens, but a late error, possibly during deployment, is a bad user
-experience. There is already a case where uv fails on installation, packages with no source
-distribution and only platform specific wheels incompatible with the current platform. While uv has
-[required environments](https://docs.astral.sh/uv/concepts/resolution/#required-environments) as
-mitigation, this requires a not well known configuration option, and questions around (un)supported
-environments are one of the most common problem for uv users. A similar situation with source
-distributions should be avoided.
+元数据一致性的另一个方面是，源码发行版必须构建成具有与 wheel 相同元数据的 wheel，或者如果没有 wheel，则每次构建都生成相同的元数据。如果违反了这个假设，可靠的依赖锁定将变得不可能：假设包 A 有一个源码发行版。在解析期间，我们构建了 A v1 并获得了依赖关系 `B>=2,<3`。我们锁定了 `A==1` 和 `B==2`。在目标机器上安装锁文件时，我们再次构建并获得了依赖关系 `B>=3,<4` 和 `C>=1,<2`。锁文件安装失败：由于约束条件改变，锁定的 `B` 版本不兼容，并且没有 `C` 的锁定候选版本。在此之后重新解析既是一个可重现性问题（锁文件实际上被忽略了），也是一个安全问题（`C` 和 `B==3` 都未经审查）。如果发生这种情况，可以在安装时失败，但在部署期间出现延迟错误对用户体验不利。已经存在一种情况 uv 会在安装时失败，即没有源码发行版且只有与当前平台不兼容的特定平台 wheel 的包。虽然 uv 有[必需环境](https://docs.astral.sh/uv/concepts/resolution/#required-environments)作为缓解措施，但这需要一个不太为人知的配置选项，并且关于（不）支持环境的问题是 uv 用户最常见的问题之一。应避免源码发行版出现类似情况。
 
-While older versions of torch and tensorflow had inconsistent metadata, all recent versions have
-consistent metadata, and we are not aware of any major package with inconsistent metadata. There is
-however no requirement in the Python packaging standards that metadata must be consistent, and
-requests to enforce this in the standards have been rejected
-(https://discuss.python.org/t/enforcing-consistent-metadata-for-packages/50008).
+虽然旧版本的 torch 和 tensorflow 存在元数据不一致的问题，但所有近期版本都具有一致的元数据，并且我们不知道有任何主要包存在不一致的元数据。然而，Python 打包标准中并没有要求元数据必须一致，并且要求强制执行此标准的请求已被拒绝 (https://discuss.python.org/t/enforcing-consistent-metadata-for-packages/50008)。
 
-There are packages that have native code that links against the native code in another package, such
-as torch. These package may support building against a range of torch versions, but once built, they
-are constrained to a specific torch version, and the runtime torch version must match the build-time
-version. These are currently a pain point across all package managers, as all major package managers
-from pip to uv cache source distribution builds. uv supports multiple builds depending on the
-version of the already installed package using
-[ `tool.uv.extra-build-dependencies`](https://docs.astral.sh/uv/concepts/projects/config/#augmenting-build-dependencies)
-with `match-runtime = true`. This is a workaround that needs to be made on the user side for each
-affected package, instead of library developers declaring this requirement, which would be possible
-with native standards support.
+有些包具有本地代码，这些代码链接到另一个包中的本地代码，例如 torch。这些包可能支持针对一系列 torch 版本进行构建，但一旦构建完成，它们就被限制在特定的 torch 版本，并且运行时的 torch 版本必须与构建时的版本匹配。目前这是所有包管理器的一个痛点，因为从 pip 到 uv 的所有主要包管理器都会缓存源码发行版的构建。uv 支持根据已安装包的版本使用 [`tool.uv.extra-build-dependencies`](https://docs.astral.sh/uv/concepts/projects/config/#augmenting-build-dependencies) 和 `match-runtime = true` 进行多次构建。这是一个需要用户为每个受影响的包进行的变通方法，而不是由库开发者声明此要求，后者可以通过原生标准支持来实现。
 
 ## Requires-python
 
-To ensure that a resolution with `requires-python = ">=3.9"` can actually be installed for the
-included Python versions, uv requires that all dependencies have the same minimum Python version.
-Package versions that declare a higher minimum Python version, e.g., `requires-python = ">=3.10"`,
-are rejected, because a resolution with that version can't be installed on Python 3.9. This ensures
-that when you are on an old Python version, you can install old packages, instead of getting newer
-packages that require newer Python syntax or standard library features.
+为确保具有 `requires-python = ">=3.9"` 的解析结果实际上可以在包含的 Python 版本上安装，uv 要求所有依赖项具有相同的最低 Python 版本。声明了更高最低 Python 版本的包版本（例如 `requires-python = ">=3.10"`）会被拒绝，因为包含该版本的解析无法在 Python 3.9 上安装。这确保了当您使用旧的 Python 版本时，可以安装旧的包，而不是获取需要更新 Python 语法或标准库功能的新包。
 
-uv ignores upper-bounds on `requires-python`, with special handling for packages with only
-ABI-specific wheels. For example, if a package declares `requires-python = ">=3.8,<4"`, the `<4`
-part is ignored. There is a detailed discussion with drawbacks and alternatives in
-[#4022](https://github.com/astral-sh/uv/issues/4022) and this
-[DPO thread](https://discuss.python.org/t/requires-python-upper-limits/12663), this section
-summarizes the aspects most relevant to uv's design.
+uv 忽略 `requires-python` 的上限，但对只有 ABI 特定 wheel 的包进行特殊处理。例如，如果一个包声明 `requires-python = ">=3.8,<4"`，则忽略 `<4` 部分。在 [#4022](https://github.com/astral-sh/uv/issues/4022) 和这个 [DPO 线程](https://discuss.python.org/t/requires-python-upper-limits/12663) 中有详细的讨论，包括缺点和替代方案，本节总结了与 uv 设计最相关的方面。
 
-For most projects, it's not possible to determine whether they will be compatible with a new version
-before it's released, so blocking newer versions in advance would block users from upgrading or
-testing newer Python versions. The exceptions are packages which use the unstable C ABI or internals
-of CPython such as its bytecode format.
+对于大多数项目来说，在新版本发布之前不可能确定它们是否兼容，因此预先阻止新版本会阻止用户升级或测试新的 Python 版本。例外情况是使用不稳定的 C ABI 或 CPython 内部（如其字节码格式）的包。
 
-Introducing a `requires-python` upper bound to a project that previously wasn't using one will not
-prevent the project from being used on a too recent Python version. Instead of failing, the resolver
-will pick an older version without the bound, circumventing the bound.
+向一个以前没有使用 `requires-python` 上限的项目引入上限，并不会阻止该项目在过于新的 Python 版本上使用。相反，解析器会选择没有该限制的旧版本，从而绕过该限制。
 
-For the resolution to be as universally installable as possible, uv ensures that the selected
-dependency versions are compatible with the `requires-python` range of the project. For example, for
-a project with `requires-python = ">=3.12"`, uv will not use a dependency version with
-`requires-python = ">=3.13"`, as otherwise the resolution is not installable on Python 3.12, which
-the project declares to support. Applying the same logic to upper bounds means that bumping the
-upper Python version bound on a project makes it compatible with less dependency versions,
-potentially failing to resolve when no version of a dependency supports the required range. (Bumping
-the lower Python version bound has the inverse effect, it only increases the set of supported
-dependency versions.)
+为了使解析结果尽可能普遍可安装，uv 确保所选的依赖版本与项目的 `requires-python` 范围兼容。例如，对于 `requires-python = ">=3.12"` 的项目，uv 不会使用 `requires-python = ">=3.13"` 的依赖版本，否则该解析结果无法在项目声明支持的 Python 3.12 上安装。将同样的逻辑应用于上限意味着，增加项目上的 Python 版本上限会使它与更少的依赖版本兼容，当没有依赖版本支持所需范围时，可能导致解析失败。（提高 Python 版本下限则具有相反的效果，它只会增加支持的依赖版本集合。）
 
-Note that this is different for Conda, as the Conda solver also determines the Python version, so it
-can choose a lower Python version instead. Conda can also change metadata after a release, so it can
-update compatibility for a new Python version, while metadata on PyPI cannot be changed once
-published.
+请注意，这对于 Conda 是不同的，因为 Conda 求解器也决定 Python 版本，所以它可以选择较低的 Python 版本。Conda 还可以在发布后更改元数据，因此它可以更新对新 Python 版本的兼容性，而 PyPI 上的元数据一旦发布就无法更改。
 
-Ignoring an upper bound is a problem for packages such as numpy which use the version-dependent C
-API of CPython. As of writing, each numpy release support 4 Python minor versions, e.g., numpy 2.0.0
-has wheels for CPython 3.9 through 3.12 and declares `requires-python = ">=3.9"`, while numpy 2.1.0
-has wheels for CPython 3.10 through 3.13 and declares `requires-python = ">=3.10"`. This means that
-when uv resolves a `numpy>=2,<3` requirement in a project with `requires-python = ">=3.9"`, it
-selects numpy 2.0.0 and the lockfile doesn't install on Python 3.13 or newer. To alleviate this,
-whenever uv rejects a version that requires a newer Python version, we fork by splitting the
-resolution markers on that Python version. This behavior can be controlled by `--fork-strategy`. In
-the example case, upon encountering numpy 2.1.0 we fork into Python versions `>=3.9,<3.10` and
-`>=3.10` and resolve two different numpy versions:
+忽略上限对于像 numpy 这样使用 CPython 版本相关 C API 的包来说是个问题。截至撰写时，每个 numpy 发布支持 4 个 Python 小版本，例如，numpy 2.0.0 有适用于 CPython 3.9 到 3.12 的 wheel，并声明 `requires-python = ">=3.9"`，而 numpy 2.1.0 有适用于 CPython 3.10 到 3.13 的 wheel，并声明 `requires-python = ">=3.10"`。这意味着当 uv 在 `requires-python = ">=3.9"` 的项目中解析 `numpy>=2,<3` 需求时，它选择 numpy 2.0.0，并且锁文件无法在 Python 3.13 或更新版本上安装。为了缓解这个问题，每当 uv 拒绝一个需要更新 Python 版本的版本时，我们都会通过在该 Python 版本上分裂解析标记来进行分叉。此行为可由 `--fork-strategy` 控制。在示例情况下，遇到 numpy 2.1.0 时，我们分叉为 Python 版本 `>=3.9,<3.10` 和 `>=3.10`，并解析两个不同的 numpy 版本：
 
 ```
 numpy==2.0.0; python_version >= "3.9" and python_version < "3.10"
 numpy==2.1.0; python_version >= "3.10"
 ```
 
-There's one case where uv does consider the upper bound: When the project uses an upper bound on
-requires Python, such as `requires-python = "==3.13.*"` for an application that only deploys to
-Python 3.13. uv prunes wheels from the lockfile that are outside the range (e.g., `cp312` and
-`cp314`) in a post-processing step, which does not influence the resolution itself.
+有一种情况 uv 确实会考虑上限：当项目使用 requires-python 的上限时，例如 `requires-python = "==3.13.*"` 表示一个仅部署到 Python 3.13 的应用程序。uv 在后处理步骤中从锁文件中修剪掉范围之外的 wheel（例如 `cp312` 和 `cp314`），这不会影响解析本身。
 
-## URL dependencies
+## URL 依赖
 
-In uv, a dependency can either be a registry dependency, a package with a version specifier or the
-plain package name, or a URL dependency. All requirements in the form `{name} @ {url}` are URL
-dependencies, and also all dependencies that have a `git`,` url`, `path`, or `workspace` source.
+在 uv 中，依赖项可以是注册表依赖项（具有版本说明符或纯包名的包），也可以是 URL 依赖项。所有形式为 `{name} @ {url}` 的需求都是 URL 依赖项，所有具有 `git`、`url`、`path` 或 `workspace` 源的依赖项也是。
 
-When a URL is declared for a package, uv pins the package to this URL, and the version this URL
-implies. If there are two conflicting URLs for a package, the resolver errors, as a URL can only be
-declared as something akin to an exact `==` pin, and not as list of URLs. A list of URLs is
-supported through [flat indexes](../../concepts/indexes.md#flat-indexes) instead.
+当为包声明了 URL 时，uv 会将该包固定到此 URL 以及该 URL 所隐含的版本。如果一个包有两个冲突的 URL，解析器会报错，因为 URL 只能被声明为类似于精确的 `==` 固定，而不能作为 URL 列表。URL 列表通过[平面索引](../../concepts/indexes.md#flat-indexes)来支持。
 
-uv requires that URLs are either declared directly (in the project, in a
-[workspace member](../../concepts/projects/workspaces.md), in a
-[constraint](../../concepts/resolution.md#dependency-constraints), or in an
-[override](../../concepts/resolution.md#dependency-overrides), any location that is discovered
-directly), or by other URL dependencies. uv discovers all URL dependencies and their transitive URL
-dependencies ahead of the resolution and pins all packages to the URLs and the versions they imply.
+uv 要求 URL 要么直接声明（在项目中、在[工作区成员](../../concepts/projects/workspaces.md)中、在[约束](../../concepts/resolution.md#dependency-constraints)中、或在[覆盖](../../concepts/resolution.md#dependency-overrides)中，任何直接被发现的 location），要么由其他 URL 依赖项声明。uv 在解析之前发现所有 URL 依赖项及其传递的 URL 依赖项，并将所有包固定到 URL 及其隐含的版本。
 
-uv does not allow URLs in index packages. This has two reasons: One is a security and predictability
-aspect, that forbids registry distributions to point to non-registry distributions and helps
-auditing which URLs can be accessed. For example, when only using one index URL and no URL
-dependencies, uv will not install any package from outside the index.
+uv 不允许在索引包中使用 URL。这有两个原因：一个是安全和可预测性方面，禁止注册发行版指向非注册发行版，并有助于审计可以访问哪些 URL。例如，当仅使用一个索引 URL 且没有 URL 依赖项时，uv 不会从该索引外部安装任何包。
 
-The other is that URLs can add additional versions to the resolution. Say the root package depends
-on foo, bar, and baz, all registry dependencies. foo depends on `bar >= 2`, but bar only has version
-1 on the index. With the incremental approach, this is an error: foo cannot be fulfilled, there is a
-resolver error. If URLs on index packages were allowed, it could be that there is a version of baz
-declares a dependency on baz-core and that has a version that declares
-`bar @ https://example.com/bar-2-py3-none-any.whl` adding a version of bar that makes requirements
-resolve. If a dependency can add new versions, discarding any version in the resolver would require
-looking at all possible versions of all direct and transitive dependencies. This breaks the core
-assumption incremental resolvers make that the set of versions for a package is static and would
-require to always fetch the metadata for all possibly reachable version.
+另一个原因是 URL 可以向解析添加额外的版本。假设根包依赖于 foo、bar 和 baz，都是注册表依赖项。foo 依赖于 `bar >= 2`，但索引上 bar 只有版本 1。使用增量方法，这是一个错误：foo 无法满足，存在解析器错误。如果允许索引包上有 URL，那么可能存在一个 baz 版本声明了对 baz-core 的依赖，而该版本声明了 `bar @ https://example.com/bar-2-py3-none-any.whl`，从而添加了一个使需求得以解析的 bar 版本。如果一个依赖项可以添加新版本，那么在解析器中丢弃任何版本都需要查看所有直接和传递依赖项的所有可能版本。这打破了增量解析器的核心假设，即包的版本集合是静态的，并且将需要始终获取所有可能可达版本的元数据。
 
-## Prioritization
+## 优先级
 
-Prioritization is important for both performance and for better resolutions.
+优先级对于性能和更好的解析结果都很重要。
 
-If we try many versions we have to later discard, resolution is slow, both because we have to read
-metadata we didn't need and because we have to track a lot of (conflict) information for this
-discarded subtree.
+如果我们尝试了许多稍后需要丢弃的版本，解析速度会很慢，这既是因为我们需要读取不需要的元数据，也是因为我们需要为这个被丢弃的子树跟踪大量（冲突）信息。
 
-There are expectations about which solution uv should choose, even if the version constraints allow
-multiple solutions. Generally, a desirable solution prioritizes use the highest versions for direct
-dependencies over those for indirect dependencies, it avoids backtracking to very old versions and
-can be installed on a target machine.
+即使版本约束允许多个解决方案，也存在关于 uv 应选择哪个解决方案的期望。通常，一个理想的解决方案会优先为直接依赖项使用最高版本，而不是间接依赖项，它避免回溯到非常旧的版本，并且可以在目标机器上安装。
 
-Internally, uv represent each package with a given package name as a number of virtual packages, for
-example, one package for each activated extra, for dependency groups, or for having a marker. While
-PubGrub needs to choose a version for each virtual package, uv's prioritization works on the package
-name level.
+在内部，uv 将具有给定包名的每个包表示为多个虚拟包，例如，每个激活的 extra 一个包，依赖组一个包，或者有标记的包一个包。虽然 PubGrub 需要为每个虚拟包选择一个版本，但 uv 的优先级工作在包名级别。
 
-Whenever we encounter a requirement on a package, we match it to a priority. The root package and
-URL requirements have the highest priority, then singleton requirements with the `==` operator, as
-their version can be directly determined, then highly conflicting packages (next paragraph), and
-finally all other packages. Inside each category, packages are sorted by when they were first
-encountered, creating a breadth first search that prioritizes direct dependencies including
-workspace dependencies over transitive dependencies.
+每当我们遇到对某个包的需求时，我们将其与优先级匹配。根包和 URL 需求具有最高优先级，然后是带有 `==` 操作符的单例需求（因为它们的版本可以直接确定），然后是高度冲突的包（下一段），最后是所有其他包。在每个类别内部，包按首次遇到的时间排序，创建一种广度优先搜索，优先处理直接依赖项（包括工作区依赖项）而不是传递依赖项。
 
-A common problem is that we have a package A with a higher priority than package B, and B is only
-compatible with older versions of A. We decide the latest version for package A. Each time we decide
-a version for B, it is immediately discarded due to the conflict with A. We have to try all possible
-versions of B, until we have either exhausted the possible range (slow), pick a very old version
-that doesn't depend on A, but most likely isn't compatible with the project either (bad) or fail to
-build a very old version (bad). Once we see such conflict happen five time, we set A and B to
-special highly-conflicting priority levels, and set them so that B is decided before A. We then
-manually backtrack to a state before deciding A, in the next iteration now deciding B instead of A.
-See [#8157](https://github.com/astral-sh/uv/issues/8157) and
-[#9843](https://github.com/astral-sh/uv/pull/9843) for a more detailed description with real world
-examples.
+一个常见的问题是，我们有一个优先级高于包 B 的包 A，而 B 只与 A 的旧版本兼容。我们为包 A 决定最新版本。每次我们为 B 决定一个版本时，由于与 A 冲突，它会立即被丢弃。我们必须尝试 B 的所有可能版本，直到我们要么耗尽了可能的范围（慢），要么选择一个不依赖于 A 但很可能也与项目不兼容的非常旧的版本（不好），要么构建一个非常旧的版本失败（不好）。一旦我们看到这种冲突发生了五次，我们将 A 和 B 设置为特殊的高冲突优先级级别，并设置它们使得 B 在 A 之前被决定。然后我们手动回溯到决定 A 之前的状态，在下次迭代中决定 B 而不是 A。有关更详细的描述和真实示例，请参阅 [#8157](https://github.com/astral-sh/uv/issues/8157) 和 [#9843](https://github.com/astral-sh/uv/pull/9843)。

@@ -1,5 +1,5 @@
-# Internals
+# 内部结构
 
-The internals section provides details about uv's internal components and implementation details.
+内部结构部分提供了关于 uv 内部组件和实现细节的详细信息。
 
-- [Resolver](./resolver.md)
+- [解析器](./resolver.md)
