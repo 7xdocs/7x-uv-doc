@@ -1,3 +1,7 @@
+docs-server:
+	cd zh
+	uvx --with-requirements docs/requirements.txt -- mkdocs serve -f mkdocs.public.yml
+
 docs-build:
 	cd zh
 	uvx --with-requirements docs/requirements.txt -- mkdocs build  -f mkdocs.public.yml 

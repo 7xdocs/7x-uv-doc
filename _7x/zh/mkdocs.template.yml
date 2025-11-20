@@ -1,4 +1,4 @@
-site_name: uv
+site_name: uv 中文文档
 theme:
   name: material
   logo: assets/logo-letter.svg
@@ -92,17 +92,17 @@ plugins:
         and a first-class project interface (e.g., `uv add ruff`) complete with lockfiles and
         workspace support.
       sections:
-        Getting started:
+        快速开始:
           - getting-started/installation.md
           - getting-started/first-steps.md
           - getting-started/features.md
-        Guides:
+        指南:
           - guides/install-python.md
           - guides/scripts.md
           - guides/tools.md
           - guides/projects.md
           - guides/package.md
-        Integrations:
+        集成:
           - guides/integration/docker.md
           - guides/integration/jupyter.md
           - guides/integration/marimo.md
@@ -115,7 +115,7 @@ plugins:
           - guides/integration/dependency-bots.md
           - guides/integration/aws-lambda.md
           - guides/integration/coiled.md
-        Projects:
+        项目:
           - concepts/projects/layout.md
           - concepts/projects/init.md
           - concepts/projects/dependencies.md
@@ -124,7 +124,7 @@ plugins:
           - concepts/projects/config.md
           - concepts/projects/build.md
           - concepts/projects/workspaces.md
-        Features:
+        功能:
           - concepts/tools.md
           - concepts/python-versions.md
           - concepts/configuration-files.md
@@ -134,14 +134,14 @@ plugins:
           - concepts/authentication/index.md
           - concepts/cache.md
           - concepts/preview.md
-        The pip interface:
+        pip 接口:
           - pip/environments.md
           - pip/packages.md
           - pip/inspection.md
           - pip/dependencies.md
           - pip/compile.md
           - pip/compatibility.md
-        Reference:
+        参考:
           - reference/cli.md
           - reference/settings.md
           - reference/storage.md
@@ -164,24 +164,24 @@ extra:
     - icon: fontawesome/brands/x-twitter
       link: https://x.com/astral_sh
 nav:
-  - Introduction: index.md
-  - Getting started:
+  - 介绍: index.md
+  - 快速开始:
       - getting-started/index.md
-      - Installation: getting-started/installation.md
-      - First steps: getting-started/first-steps.md
-      - Features: getting-started/features.md
-      - Getting help: getting-started/help.md
-  - Guides:
+      - 安装: getting-started/installation.md
+      - 第一步: getting-started/first-steps.md
+      - 功能: getting-started/features.md
+      - 帮助: getting-started/help.md
+  - 指南:
       - guides/index.md
-      - Installing Python: guides/install-python.md
-      - Running scripts: guides/scripts.md
-      - Using tools: guides/tools.md
-      - Working on projects: guides/projects.md
-      - Publishing packages: guides/package.md
-      - Migration:
+      - 安装 Python: guides/install-python.md
+      - 运行脚本: guides/scripts.md
+      - 使用工具: guides/tools.md
+      - 项目工作流程: guides/projects.md
+      - 构建和发布包: guides/package.md
+      - 迁移:
           - guides/migration/index.md
-          - From pip to a uv project: guides/migration/pip-to-project.md
-      - Integrations:
+          - 从 pip 到 uv 项目: guides/migration/pip-to-project.md
+      - 集成:
           - guides/integration/index.md
           - Docker: guides/integration/docker.md
           - Jupyter: guides/integration/jupyter.md
@@ -195,21 +195,21 @@ nav:
           - Dependency bots: guides/integration/dependency-bots.md
           - AWS Lambda: guides/integration/aws-lambda.md
           - Coiled: guides/integration/coiled.md
-  - Concepts:
+  - 概念:
       - concepts/index.md
-      - Projects:
+      - 项目:
           - concepts/projects/index.md
-          - Structure and files: concepts/projects/layout.md
-          - Creating projects: concepts/projects/init.md
-          - Managing dependencies: concepts/projects/dependencies.md
+          - 文档结构: concepts/projects/layout.md
+          - 新建项目: concepts/projects/init.md
+          - 管理依赖: concepts/projects/dependencies.md
           - Running commands: concepts/projects/run.md
           - Locking and syncing: concepts/projects/sync.md
           - Configuring projects: concepts/projects/config.md
           - Building distributions: concepts/projects/build.md
           - Using workspaces: concepts/projects/workspaces.md
-      - Tools: concepts/tools.md
-      - Python versions: concepts/python-versions.md
-      - Configuration files: concepts/configuration-files.md
+      - 工具: concepts/tools.md
+      - Python 版本: concepts/python-versions.md
+      - 配置文件: concepts/configuration-files.md
       - Package indexes: concepts/indexes.md
       - Resolution: concepts/resolution.md
       - Build backend: concepts/build-backend.md
@@ -232,14 +232,14 @@ nav:
           - Declaring dependencies: pip/dependencies.md
           - Locking environments: pip/compile.md
           - Compatibility with pip: pip/compatibility.md
-  - Reference:
+  - 参考:
       - reference/index.md
-      - Commands: reference/cli.md
-      - Settings: reference/settings.md
-      - Environment variables: reference/environment.md
-      - Storage: reference/storage.md
-      - Installer options: reference/installer.md
-      - Troubleshooting:
+      - 命令行: reference/cli.md
+      - 设置: reference/settings.md
+      - 环境变量: reference/environment.md
+      - 存储: reference/storage.md
+      - 安装配置: reference/installer.md
+      - 故障问题:
           - reference/troubleshooting/index.md
           - Build failures: reference/troubleshooting/build-failures.md
           - Reproducible examples: reference/troubleshooting/reproducible-examples.md
