@@ -1,81 +1,69 @@
-# Preview features
+# 预览功能
 
-uv includes opt-in preview features to provide an opportunity for community feedback and increase
-confidence that changes are a net-benefit before enabling them for everyone.
+uv 提供了可选的预览功能，以便在向所有用户启用之前收集社区反馈，并增强对更改带来净收益的信心。
 
-## Enabling preview features
+## 启用预览功能
 
-To enable all preview features, use the `--preview` flag:
+要启用所有预览功能，请使用 `--preview` 标志：
 
 ```console
 $ uv run --preview ...
 ```
 
-Or, set the `UV_PREVIEW` environment variable:
+或者，设置 `UV_PREVIEW` 环境变量：
 
 ```console
 $ UV_PREVIEW=1 uv run ...
 ```
 
-To enable specific preview features, use the `--preview-features` flag:
+要启用特定的预览功能，请使用 `--preview-features` 标志：
 
 ```console
 $ uv run --preview-features foo ...
 ```
 
-The `--preview-features` flag can be repeated to enable multiple features:
+可以重复使用 `--preview-features` 标志来启用多个功能：
 
 ```console
 $ uv run --preview-features foo --preview-features bar ...
 ```
 
-Or, features can be provided in a comma separated list:
+或者，功能可以在逗号分隔的列表中提供：
 
 ```console
 $ uv run --preview-features foo,bar ...
 ```
 
-The `UV_PREVIEW_FEATURES` environment variable can be used similarly, e.g.:
+`UV_PREVIEW_FEATURES` 环境变量可以类似地使用，例如：
 
 ```console
 $ UV_PREVIEW_FEATURES=foo,bar uv run ...
 ```
 
-For backwards compatibility, enabling preview features that do not exist will warn, but not error.
+为了向后兼容，启用不存在的预览功能会发出警告，但不会报错。
 
-## Using preview features
+## 使用预览功能
 
-Often, preview features can be used without changing any preview settings if the behavior change is
-gated by some sort of user interaction, For example, while `pylock.toml` support is in preview, you
-can use `uv pip install` with a `pylock.toml` file without additional configuration because
-specifying the `pylock.toml` file indicates you want to use the feature. However, a warning will be
-displayed that the feature is in preview. The preview feature can be enabled to silence the warning.
+通常，如果行为变更由某种用户交互控制，则无需更改任何预览设置即可使用预览功能。例如，在 `pylock.toml` 支持处于预览阶段时，您可以使用 `uv pip install` 和 `pylock.toml` 文件而无需额外配置，因为指定 `pylock.toml` 文件表明您希望使用该功能。但是，会显示一条警告，指出该功能处于预览状态。可以启用预览功能以消除此警告。
 
-Other preview features change behavior without changes to your use of uv. For example, when the
-`python-upgrade` feature is enabled, the default behavior of `uv python install` changes to allow uv
-to upgrade Python versions transparently. This feature requires enabling the preview flag for proper
-usage.
+其他预览功能会更改行为，而无需您更改 uv 的使用方式。例如，当启用 `python-upgrade` 功能时，`uv python install` 的默认行为会发生改变，允许 uv 透明地升级 Python 版本。此功能需要启用预览标志才能正常使用。
 
-## Available preview features
+## 可用的预览功能
 
-The following preview features are available:
+以下预览功能可用：
 
-- `add-bounds`: Allows configuring the
-  [default bounds for `uv add`](../reference/settings.md#add-bounds) invocations.
-- `json-output`: Allows `--output-format json` for various uv commands.
-- `package-conflicts`: Allows defining workspace conflicts at the package level.
-- `pylock`: Allows installing from `pylock.toml` files.
-- `python-install-default`: Allows
-  [installing `python` and `python3` executables](./python-versions.md#installing-python-executables).
-- `python-upgrade`: Allows
-  [transparent Python version upgrades](./python-versions.md#upgrading-python-versions).
-- `format`: Allows using `uv format`.
-- `native-auth`: Enables storage of credentials in a
-  [system-native location](../concepts/authentication/http.md#the-uv-credentials-store).
-- `workspace-metadata`: Allows using `uv workspace metadata`.
-- `workspace-dir`: Allows using `uv workspace dir`.
-- `workspace-list`: Allows using `uv workspace list`.
+- `add-bounds`：允许配置 [`uv add`](../reference/settings.md#add-bounds) 调用的默认边界。
+- `json-output`：允许在各种 uv 命令中使用 `--output-format json`。
+- `package-conflicts`：允许在包级别定义工作区冲突。
+- `pylock`：允许从 `pylock.toml` 文件安装。
+- `python-install-default`：允许[安装 `python` 和 `python3` 可执行文件](./python-versions.md#installing-python-executables)。
+- `python-upgrade`：允许[透明升级 Python 版本](./python-versions.md#upgrading-python-versions)。
+- `format`：允许使用 `uv format`。
+- `native-auth`：允许在[系统原生位置](../concepts/authentication/http.md#the-uv-credentials-store)存储凭据。
+- `workspace-metadata`：允许使用 `uv workspace metadata`。
+- `workspace-dir`：允许使用 `uv workspace dir`。
+- `workspace-list`：允许使用 `uv workspace list`。
 
-## Disabling preview features
+## 禁用预览功能
 
-The `--no-preview` option can be used to disable preview features.
+可以使用 `--no-preview` 选项来禁用预览功能。

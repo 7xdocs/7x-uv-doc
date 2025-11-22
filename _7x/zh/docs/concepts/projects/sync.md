@@ -1,209 +1,165 @@
-# Locking and syncing
+# 锁定与同步
 
-Locking is the process of resolving your project's dependencies into a
-[lockfile](./layout.md#the-lockfile). Syncing is the process of installing a subset of packages from
-the lockfile into the [project environment](./layout.md#the-project-environment).
+锁定是将项目依赖项解析到[锁定文件](./layout.md#the-lockfile)的过程。同步是将锁定文件中的部分包安装到[项目环境](./layout.md#the-project-environment)的过程。
 
-## Automatic lock and sync
+## 自动锁定与同步
 
-Locking and syncing are _automatic_ in uv. For example, when `uv run` is used, the project is locked
-and synced before invoking the requested command. This ensures the project environment is always
-up-to-date. Similarly, commands which read the lockfile, such as `uv tree`, will automatically
-update it before running.
+在 uv 中，锁定和同步是*自动*进行的。例如，当使用 `uv run` 时，会在调用请求的命令之前锁定和同步项目。这确保了项目环境始终是最新的。类似地，读取锁定文件的命令（例如 `uv tree`）会在运行前自动更新锁定文件。
 
-To disable automatic locking, use the `--locked` option:
+要禁用自动锁定，请使用 `--locked` 选项：
 
 ```console
 $ uv run --locked ...
 ```
 
-If the lockfile is not up-to-date, uv will raise an error instead of updating the lockfile.
+如果锁定文件不是最新的，uv 将引发错误而不是更新锁定文件。
 
-To use the lockfile without checking if it is up-to-date, use the `--frozen` option:
+要使用锁定文件而不检查它是否是最新的，请使用 `--frozen` 选项：
 
 ```console
 $ uv run --frozen ...
 ```
 
-Similarly, to run a command without checking if the environment is up-to-date, use the `--no-sync`
-option:
+类似地，要运行命令而不检查环境是否是最新的，请使用 `--no-sync` 选项：
 
 ```console
 $ uv run --no-sync ...
 ```
 
-## Checking the lockfile
+## 检查锁定文件
 
-When considering if the lockfile is up-to-date, uv will check if it matches the project metadata.
-For example, if you add a dependency to your `pyproject.toml`, the lockfile will be considered
-outdated. Similarly, if you change the version constraints for a dependency such that the locked
-version is excluded, the lockfile will be considered outdated. However, if you change the version
-constraints such that the existing locked version is still included, the lockfile will still be
-considered up-to-date.
+在判断锁定文件是否为最新时，uv 会检查它是否与项目元数据匹配。例如，如果你向 `pyproject.toml` 添加了一个依赖项，锁定文件将被视为过时。类似地，如果你更改了某个依赖项的版本约束，使得锁定的版本被排除在外，锁定文件也将被视为过时。但是，如果你更改版本约束后，现有的锁定版本仍然在约束范围内，则锁定文件仍将被视为是最新的。
 
-You can check if the lockfile is up-to-date by passing the `--check` flag to `uv lock`:
+你可以通过向 `uv lock` 传递 `--check` 标志来检查锁定文件是否为最新：
 
 ```console
 $ uv lock --check
 ```
 
-This is equivalent to the `--locked` flag for other commands.
+这等效于其他命令的 `--locked` 标志。
 
 !!! important
 
-    uv will not consider lockfiles outdated when new versions of packages are released — the lockfile
-    needs to be explicitly updated if you want to upgrade dependencies. See the documentation on
-    [upgrading locked package versions](#upgrading-locked-package-versions) for details.
+    当有新版本的包发布时，uv 不会认为锁定文件过时 —— 如果你想升级依赖项，需要显式更新锁定文件。有关详细信息，请参阅[升级锁定的包版本](#upgrading-locked-package-versions)的文档。
 
-## Creating the lockfile
+## 创建锁定文件
 
-While the lockfile is created [automatically](#automatic-lock-and-sync), the lockfile may also be
-explicitly created or updated using `uv lock`:
+虽然锁定文件是[自动](#automatic-lock-and-sync)创建的，但也可以使用 `uv lock` 显式创建或更新锁定文件：
 
 ```console
 $ uv lock
 ```
 
-## Syncing the environment
+## 同步环境
 
-While the environment is synced [automatically](#automatic-lock-and-sync), it may also be explicitly
-synced using `uv sync`:
+虽然环境是[自动](#automatic-lock-and-sync)同步的，但也可以使用 `uv sync` 显式同步环境：
 
 ```console
 $ uv sync
 ```
 
-Syncing the environment manually is especially useful for ensuring your editor has the correct
-versions of dependencies.
+手动同步环境对于确保编辑器具有正确版本的依赖项特别有用。
 
-### Editable installation
+### 可编辑安装
 
-When the environment is synced, uv will install the project (and other workspace members) as
-_editable_ packages, such that re-syncing is not necessary for changes to be reflected in the
-environment.
+当环境同步时，uv 会将项目（以及其他工作区成员）作为*可编辑*包安装，这样在环境反映更改时就不需要重新同步。
 
-To opt-out of this behavior, use the `--no-editable` option.
+要选择退出此行为，请使用 `--no-editable` 选项。
 
 !!! note
 
-    If the project does not define a build system, it will not be installed.
-    See the [build systems](./config.md#build-systems) documentation for details.
+    如果项目未定义构建系统，则不会被安装。有关详细信息，请参阅[构建系统](./config.md#build-systems)文档。
 
-### Retaining extraneous packages
+### 保留无关包
 
-Syncing is "exact" by default, which means it will remove any packages that are not present in the
-lockfile.
+默认情况下，同步是"精确的"，这意味着它将删除锁定文件中不存在的任何包。
 
-To retain extraneous packages, use the `--inexact` option:
+要保留无关包，请使用 `--inexact` 选项：
 
 ```console
 $ uv sync --inexact
 ```
 
-### Syncing optional dependencies
+### 同步可选依赖项
 
-uv reads optional dependencies from the `[project.optional-dependencies]` table. These are
-frequently referred to as "extras".
+uv 从 `[project.optional-dependencies]` 表中读取可选依赖项。这些通常被称为"extras"。
 
-uv does not sync extras by default. Use the `--extra` option to include an extra.
+默认情况下，uv 不会同步 extras。使用 `--extra` 选项来包含一个 extra。
 
 ```console
 $ uv sync --extra foo
 ```
 
-To quickly enable all extras, use the `--all-extras` option.
+要快速启用所有 extras，请使用 `--all-extras` 选项。
 
-See the [optional dependencies](./dependencies.md#optional-dependencies) documentation for details
-on how to manage optional dependencies.
+有关如何管理可选依赖项的详细信息，请参阅[可选依赖项](./dependencies.md#optional-dependencies)文档。
 
-### Syncing development dependencies
+### 同步开发依赖项
 
-uv reads development dependencies from the `[dependency-groups]` table (as defined in
-[PEP 735](https://peps.python.org/pep-0735/)).
+uv 从 `[dependency-groups]` 表（根据 [PEP 735](https://peps.python.org/pep-0735/) 定义）中读取开发依赖项。
 
-The `dev` group is special-cased and synced by default. See the
-[default groups](./dependencies.md#default-groups) documentation for details on changing the
-defaults.
+`dev` 组是特殊情况，默认情况下会被同步。有关更改默认值的详细信息，请参阅[默认组](./dependencies.md#default-groups)文档。
 
-The `--no-dev` flag can be used to exclude the `dev` group.
+可以使用 `--no-dev` 标志来排除 `dev` 组。
 
-The `--only-dev` flag can be used to install the `dev` group _without_ the project and its
-dependencies.
+可以使用 `--only-dev` 标志来*仅*安装 `dev` 组，*而不*安装项目及其依赖项。
 
-Additional groups can be included or excluded with the `--all-groups`, `--no-default-groups`,
-`--group <name>`, `--only-group <name>`, and `--no-group <name>` options. The semantics of
-`--only-group` are the same as `--only-dev`, the project will not be included. However,
-`--only-group` will also exclude default groups.
+可以使用 `--all-groups`、`--no-default-groups`、`--group <name>`、`--only-group <name>` 和 `--no-group <name>` 选项来包含或排除其他组。`--only-group` 的语义与 `--only-dev` 相同，项目将不会被包含。但是，`--only-group` 也会排除默认组。
 
-Group exclusions always take precedence over inclusions, so given the command:
+组的排除总是优先于包含，因此给定命令：
 
 ```
 $ uv sync --no-group foo --group foo
 ```
 
-The `foo` group would not be installed.
+`foo` 组将不会被安装。
 
-See the [development dependencies](./dependencies.md#development-dependencies) documentation for
-details on how to manage development dependencies.
+有关如何管理开发依赖项的详细信息，请参阅[开发依赖项](./dependencies.md#development-dependencies)文档。
 
-## Upgrading locked package versions
+## 升级锁定的包版本
 
-With an existing `uv.lock` file, uv will prefer the previously locked versions of packages when
-running `uv sync` and `uv lock`. Package versions will only change if the project's dependency
-constraints exclude the previous, locked version.
+对于已存在的 `uv.lock` 文件，在运行 `uv sync` 和 `uv lock` 时，uv 将优先使用先前锁定的包版本。只有当项目的依赖项约束排除了先前锁定的版本时，包版本才会更改。
 
-To upgrade all packages:
+要升级所有包：
 
 ```console
 $ uv lock --upgrade
 ```
 
-To upgrade a single package to the latest version, while retaining the locked versions of all other
-packages:
+要将单个包升级到最新版本，同时保留所有其他包的锁定版本：
 
 ```console
 $ uv lock --upgrade-package <package>
 ```
 
-To upgrade a single package to a specific version:
+要将单个包升级到特定版本：
 
 ```console
 $ uv lock --upgrade-package <package>==<version>
 ```
 
-In all cases, upgrades are limited to the project's dependency constraints. For example, if the
-project defines an upper bound for a package then an upgrade will not go beyond that version.
+在所有情况下，升级都受限于项目的依赖项约束。例如，如果项目为某个包定义了上限版本，则升级不会超过该版本。
 
 !!! note
 
-    uv applies similar logic to Git dependencies. For example, if a Git dependency references
-    the `main` branch, uv will prefer the locked commit SHA in an existing `uv.lock` file over
-    the latest commit on the `main` branch, unless the `--upgrade` or `--upgrade-package` flags
-    are used.
+    uv 对 Git 依赖项应用了类似的逻辑。例如，如果一个 Git 依赖项引用了 `main` 分支，在现有的 `uv.lock` 文件中，uv 将优先使用锁定的提交 SHA，而不是 `main` 分支上的最新提交，除非使用了 `--upgrade` 或 `--upgrade-package` 标志。
 
-These flags can also be provided to `uv sync` or `uv run` to update the lockfile _and_ the
-environment.
+这些标志也可以提供给 `uv sync` 或 `uv run`，以更新锁定文件*和*环境。
 
-## Exporting the lockfile
+## 导出锁定文件
 
-If you need to integrate uv with other tools or workflows, you can export `uv.lock` to the
-`requirements.txt` format with `uv export --format requirements-txt`. The generated
-`requirements.txt` file can then be installed via `uv pip install`, or with other tools like `pip`.
+如果你需要将 uv 与其他工具或工作流集成，可以使用 `uv export --format requirements-txt` 将 `uv.lock` 导出为 `requirements.txt` 格式。生成的 `requirements.txt` 文件可以通过 `uv pip install` 或其他工具（如 `pip`）进行安装。
 
-In general, we recommend against using both a `uv.lock` and a `requirements.txt` file. If you find
-yourself exporting a `uv.lock` file, consider opening an issue to discuss your use case.
+通常，我们不建议同时使用 `uv.lock` 和 `requirements.txt` 文件。如果你发现自己需要导出 `uv.lock` 文件，请考虑开一个 issue 来讨论你的使用场景。
 
-## Partial installations
+## 部分安装
 
-Sometimes it's helpful to perform installations in multiple steps, e.g., for optimal layer caching
-while building a Docker image. `uv sync` has several flags for this purpose.
+有时分多个步骤执行安装会很有帮助，例如，在构建 Docker 镜像时为了优化层缓存。为此，`uv sync` 提供了几个标志。
 
-- `--no-install-project`: Do not install the current project
-- `--no-install-workspace`: Do not install any workspace members, including the root project
-- `--no-install-package <NO_INSTALL_PACKAGE>`: Do not install the given package(s)
+- `--no-install-project`: 不安装当前项目
+- `--no-install-workspace`: 不安装任何工作区成员，包括根项目
+- `--no-install-package <NO_INSTALL_PACKAGE>`: 不安装给定的包
 
-When these options are used, all the dependencies of the target are still installed. For example,
-`--no-install-project` will omit the _project_ but not any of its dependencies.
+当使用这些选项时，目标的所有依赖项仍然会被安装。例如，`--no-install-project` 将*省略项目*，但不会省略其任何依赖项。
 
-If used improperly, these flags can result in a broken environment since a package can be missing
-its dependencies.
+如果使用不当，这些标志可能导致环境损坏，因为某个包可能缺少其依赖项。

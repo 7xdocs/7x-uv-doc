@@ -1,11 +1,10 @@
-# Configuring projects
+# 配置项目
 
-## Python version requirement
+## Python 版本要求
 
-Projects may declare the Python versions supported by the project in the `project.requires-python`
-field of the `pyproject.toml`.
+项目可以在 `pyproject.toml` 的 `project.requires-python` 字段中声明项目支持的 Python 版本。
 
-It is recommended to set a `requires-python` value:
+建议设置 `requires-python` 值：
 
 ```toml title="pyproject.toml" hl_lines="4"
 [project]
@@ -14,74 +13,64 @@ version = "0.1.0"
 requires-python = ">=3.12"
 ```
 
-The Python version requirement determines the Python syntax that is allowed in the project and
-affects selection of dependency versions (they must support the same Python version range).
+Python 版本要求决定了项目中允许使用的 Python 语法，并影响依赖版本的选择（它们必须支持相同的 Python 版本范围）。
 
-## Entry points
+## 入口点
 
-[Entry points](https://packaging.python.org/en/latest/specifications/entry-points/#entry-points) are
-the official term for an installed package to advertise interfaces. These include:
+[入口点](https://packaging.python.org/en/latest/specifications/entry-points/#entry-points)是已安装包发布接口的官方术语。这些包括：
 
-- [Command line interfaces](#command-line-interfaces)
-- [Graphical user interfaces](#graphical-user-interfaces)
-- [Plugin entry points](#plugin-entry-points)
+- [命令行接口](#命令行接口)
+- [图形用户界面](#图形用户界面)
+- [插件入口点](#插件入口点)
 
 !!! important
 
-    Using the entry point tables requires a [build system](#build-systems) to be defined.
+    使用入口点表需要定义[构建系统](#构建系统)。
 
-### Command-line interfaces
+### 命令行接口
 
-Projects may define command line interfaces (CLIs) for the project in the `[project.scripts]` table
-of the `pyproject.toml`.
+项目可以在 `pyproject.toml` 的 `[project.scripts]` 表中定义项目的命令行接口。
 
-For example, to declare a command called `hello` that invokes the `hello` function in the `example`
-module:
+例如，声明一个名为 `hello` 的命令，该命令调用 `example` 模块中的 `hello` 函数：
 
 ```toml title="pyproject.toml"
 [project.scripts]
 hello = "example:hello"
 ```
 
-Then, the command can be run from a console:
+然后，可以从控制台运行该命令：
 
 ```console
 $ uv run hello
 ```
 
-### Graphical user interfaces
+### 图形用户界面
 
-Projects may define graphical user interfaces (GUIs) for the project in the `[project.gui-scripts]`
-table of the `pyproject.toml`.
+项目可以在 `pyproject.toml` 的 `[project.gui-scripts]` 表中定义项目的图形用户界面。
 
 !!! important
 
-    These are only different from [command-line interfaces](#command-line-interfaces) on Windows, where
-    they are wrapped by a GUI executable so they can be started without a console. On other platforms,
-    they behave the same.
+    这些仅在 Windows 上与[命令行接口](#命令行接口)不同，在 Windows 上它们由 GUI 可执行文件包装，因此可以在没有控制台的情况下启动。在其他平台上，它们的行为相同。
 
-For example, to declare a command called `hello` that invokes the `app` function in the `example`
-module:
+例如，声明一个名为 `hello` 的命令，该命令调用 `example` 模块中的 `app` 函数：
 
 ```toml title="pyproject.toml"
 [project.gui-scripts]
 hello = "example:app"
 ```
 
-### Plugin entry points
+### 插件入口点
 
-Projects may define entry points for plugin discovery in the
-[`[project.entry-points]`](https://packaging.python.org/en/latest/guides/creating-and-discovering-plugins/#using-package-metadata)
-table of the `pyproject.toml`.
+项目可以在 `pyproject.toml` 的 [`[project.entry-points]`](https://packaging.python.org/en/latest/guides/creating-and-discovering-plugins/#using-package-metadata) 表中定义用于插件发现的入口点。
 
-For example, to register the `example-plugin-a` package as a plugin for `example`:
+例如，将 `example-plugin-a` 包注册为 `example` 的插件：
 
 ```toml title="pyproject.toml"
 [project.entry-points.'example.plugins']
 a = "example_plugin_a"
 ```
 
-Then, in `example`, plugins would be loaded with:
+然后，在 `example` 中，将通过以下方式加载插件：
 
 ```python title="example/__init__.py"
 from importlib.metadata import entry_points
@@ -92,154 +81,101 @@ for plugin in entry_points(group='example.plugins'):
 
 !!! note
 
-    The `group` key can be an arbitrary value, it does not need to include the package name or
-    "plugins". However, it is recommended to namespace the key by the package name to avoid
-    collisions with other packages.
+    `group` 键可以是任意值，不需要包含包名或 "plugins"。但是，建议使用包名对键进行命名空间划分，以避免与其他包发生冲突。
 
-## Build systems
+## 构建系统
 
-A build system determines how the project should be packaged and installed. Projects may declare and
-configure a build system in the `[build-system]` table of the `pyproject.toml`.
+构建系统决定了项目应如何打包和安装。项目可以在 `pyproject.toml` 的 `[build-system]` 表中声明和配置构建系统。
 
-uv uses the presence of a build system to determine if a project contains a package that should be
-installed in the project virtual environment. If a build system is not defined, uv will not attempt
-to build or install the project itself, just its dependencies. If a build system is defined, uv will
-build and install the project into the project environment.
+uv 使用构建系统的存在来确定项目是否包含应安装在项目虚拟环境中的包。如果未定义构建系统，uv 将不会尝试构建或安装项目本身，只会安装其依赖项。如果定义了构建系统，uv 将构建项目并将其安装到项目环境中。
 
-The `--build-backend` option can be provided to `uv init` to create a packaged project with an
-appropriate layout. The `--package` option can be provided to `uv init` to create a packaged project
-with the default build system.
+可以向 `uv init` 提供 `--build-backend` 选项来创建具有适当布局的打包项目。可以向 `uv init` 提供 `--package` 选项来创建具有默认构建系统的打包项目。
 
 !!! note
 
-    While uv will not build and install the current project without a build system definition,
-    the presence of a `[build-system]` table is not required in other packages. For legacy reasons,
-    if a build system is not defined, then `setuptools.build_meta:__legacy__` is used to build the
-    package. Packages you depend on may not explicitly declare their build system but are still
-    installable. Similarly, if you [add a dependency on a local project](./dependencies.md#path)
-    or install it with `uv pip`, uv will attempt to build and install it regardless of the presence
-    of a `[build-system]` table.
+    虽然在没有构建系统定义的情况下，uv 不会构建和安装当前项目，但其他包中不需要存在 `[build-system]` 表。由于历史原因，如果未定义构建系统，则使用 `setuptools.build_meta:__legacy__` 来构建包。您依赖的包可能没有显式声明其构建系统，但仍然可以安装。类似地，如果您[添加对本地项目的依赖](./dependencies.md#path)或使用 `uv pip` 安装它，uv 将尝试构建和安装它，无论是否存在 `[build-system]` 表。
 
-Build systems are used to power the following features:
+构建系统用于支持以下功能：
 
-- Including or excluding files from distributions
-- Editable installation behavior
-- Dynamic project metadata
-- Compilation of native code
-- Vendoring shared libraries
+- 在发行版中包含或排除文件
+- 可编辑安装行为
+- 动态项目元数据
+- 原生代码编译
+- 供应共享库
 
-To configure these features, refer to the documentation of your chosen build system.
+要配置这些功能，请参阅您选择的构建系统的文档。
 
-## Project packaging
+## 项目打包
 
-As discussed in [build systems](#build-systems), a Python project must be built to be installed.
-This process is generally referred to as "packaging".
+如[构建系统](#构建系统)中所述，Python 项目必须经过构建才能安装。此过程通常称为"打包"。
 
-You probably need a package if you want to:
+如果您想执行以下操作，可能需要一个包：
 
-- Add commands to the project
-- Distribute the project to others
-- Use a `src` and `test` layout
-- Write a library
+- 向项目添加命令
+- 将项目分发给其他人
+- 使用 `src` 和 `test` 布局
+- 编写库
 
-You probably _do not_ need a package if you are:
+如果您正在执行以下操作，则可能*不需要*包：
 
-- Writing scripts
-- Building a simple application
-- Using a flat layout
+- 编写脚本
+- 构建简单的应用程序
+- 使用扁平布局
 
-While uv usually uses the declaration of a [build system](#build-systems) to determine if a project
-should be packaged, uv also allows overriding this behavior with the
-[`tool.uv.package`](../../reference/settings.md#package) setting.
+虽然 uv 通常使用[构建系统](#构建系统)的声明来确定是否应打包项目，但 uv 也允许使用 [`tool.uv.package`](../../reference/settings.md#package) 设置覆盖此行为。
 
-Setting `tool.uv.package = true` will force a project to be built and installed into the project
-environment. If no build system is defined, uv will use the setuptools legacy backend.
+设置 `tool.uv.package = true` 将强制构建项目并将其安装到项目环境中。如果未定义构建系统，uv 将使用 setuptools 传统后端。
 
-Setting `tool.uv.package = false` will force a project package _not_ to be built and installed into
-the project environment. uv will ignore a declared build system when interacting with the project;
-however, uv will still respect explicit attempts to build the project such as invoking `uv build`.
+设置 `tool.uv.package = false` 将强制*不*构建项目包并将其安装到项目环境中。在与项目交互时，uv 将忽略已声明的构建系统；但是，uv 仍将尊重显式尝试构建项目的操作，例如调用 `uv build`。
 
-## Project environment path
+## 项目环境路径
 
-The `UV_PROJECT_ENVIRONMENT` environment variable can be used to configure the project virtual
-environment path (`.venv` by default).
+`UV_PROJECT_ENVIRONMENT` 环境变量可用于配置项目虚拟环境路径（默认为 `.venv`）。
 
-If a relative path is provided, it will be resolved relative to the workspace root. If an absolute
-path is provided, it will be used as-is, i.e., a child directory will not be created for the
-environment. If an environment is not present at the provided path, uv will create it.
+如果提供了相对路径，它将相对于工作区根目录进行解析。如果提供了绝对路径，它将按原样使用，即不会为环境创建子目录。如果提供的路径上不存在环境，uv 将创建它。
 
-This option can be used to write to the system Python environment, though it is not recommended.
-`uv sync` will remove extraneous packages from the environment by default and, as such, may leave
-the system in a broken state.
+此选项可用于写入系统 Python 环境，但不推荐这样做。`uv sync` 默认会从环境中删除无关的包，因此可能会使系统处于损坏状态。
 
-To target the system environment, set `UV_PROJECT_ENVIRONMENT` to the prefix of the Python
-installation. For example, on Debian-based systems, this is usually `/usr/local`:
+要以系统环境为目标，请将 `UV_PROJECT_ENVIRONMENT` 设置为 Python 安装的前缀。例如，在基于 Debian 的系统上，这通常是 `/usr/local`：
 
 ```console
 $ python -c "import sysconfig; print(sysconfig.get_config_var('prefix'))"
 /usr/local
 ```
 
-To target this environment, you'd export `UV_PROJECT_ENVIRONMENT=/usr/local`.
+要以该环境为目标，您需要导出 `UV_PROJECT_ENVIRONMENT=/usr/local`。
 
 !!! important
 
-    If an absolute path is provided and the setting is used across multiple projects, the
-    environment will be overwritten by invocations in each project. This setting is only recommended
-    for use for a single project in CI or Docker images.
+    如果提供了绝对路径并且在多个项目中使用了该设置，则每个项目中的调用都将覆盖环境。此设置仅建议在 CI 或 Docker 镜像中用于单个项目。
 
 !!! note
 
-    By default, uv does not read the `VIRTUAL_ENV` environment variable during project operations.
-    A warning will be displayed if `VIRTUAL_ENV` is set to a different path than the project's
-    environment. The `--active` flag can be used to opt-in to respecting `VIRTUAL_ENV`. The
-    `--no-active` flag can be used to silence the warning.
+    默认情况下，uv 在项目操作期间不会读取 `VIRTUAL_ENV` 环境变量。如果 `VIRTUAL_ENV` 设置为与项目环境不同的路径，将显示警告。可以使用 `--active` 标志选择加入尊重 `VIRTUAL_ENV`。可以使用 `--no-active` 标志来静默警告。
 
-## Build isolation
+## 构建隔离
 
-By default, uv builds all packages in isolated virtual environments alongside their declared build
-dependencies, as per [PEP 517](https://peps.python.org/pep-0517/).
+默认情况下，根据 [PEP 517](https://peps.python.org/pep-0517/)，uv 在隔离的虚拟环境中构建所有包及其声明的构建依赖项。
 
-Some packages are incompatible with this approach to build isolation, be it intentionally or
-unintentionally.
+有些包与这种构建隔离方法不兼容，无论是有意还是无意。
 
-For example, packages like [`flash-attn`](https://pypi.org/project/flash-attn/) and
-[`deepspeed`](https://pypi.org/project/deepspeed/) need to build against the same version of PyTorch
-that is installed in the project environment; by building them in an isolated environment, they may
-inadvertently build against a different version of PyTorch, leading to runtime errors.
+例如，像 [`flash-attn`](https://pypi.org/project/flash-attn/) 和 [`deepspeed`](https://pypi.org/project/deepspeed/) 这样的包需要针对项目环境中安装的相同版本的 PyTorch 进行构建；通过在隔离环境中构建它们，它们可能会无意中针对不同版本的 PyTorch 进行构建，导致运行时错误。
 
-In other cases, packages may accidentally omit necessary dependencies in their declared build
-dependency list. For example, [`cchardet`](https://pypi.org/project/cchardet/) requires `cython` to
-be installed in the project environment prior to installing `cchardet`, but does not declare it as a
-build dependency.
+在其他情况下，包可能会在其声明的构建依赖项列表中意外遗漏必要的依赖项。例如，[`cchardet`](https://pypi.org/project/cchardet/) 要求在安装 `cchardet` 之前将 `cython` 安装在项目环境中，但未将其声明为构建依赖项。
 
-To address these issues, uv supports two separate approaches to modifying the build isolation
-behavior:
+为了解决这些问题，uv 支持两种单独的方法来修改构建隔离行为：
 
-1. **Augmenting the list of build dependencies**: This allows you to install a package in an
-   isolated environment, but with additional build dependencies that are not declared by the package
-   itself via the [`extra-build-dependencies`](../../reference/settings.md#extra-build-dependencies)
-   setting. For packages like `flash-attn`, you can even enforce that those build dependencies (like
-   `torch`) match the version of the package that is or will be installed in the project
-   environment.
+1. **扩展构建依赖项列表**：这允许您在隔离环境中安装包，但带有包本身未声明的额外构建依赖项，通过 [`extra-build-dependencies`](../../reference/settings.md#extra-build-dependencies) 设置。对于像 `flash-attn` 这样的包，您甚至可以强制这些构建依赖项（如 `torch`）与项目环境中安装或将要安装的包版本匹配。
 
-1. **Disabling build isolation for specific packages**: This allows you to install a package without
-   building it in an isolated environment.
+2. **对特定包禁用构建隔离**：这允许您在非隔离环境中安装包。
 
-When possible, we recommend augmenting the build dependencies rather than disabling build isolation
-entirely, as the latter approach requires that the build dependencies are installed in the project
-environment _prior_ to installing the package itself, which can lead to more complex installation
-steps, the inclusion of extraneous packages in the project environment, and difficulty in
-reproducing the project environment in other contexts.
+在可能的情况下，我们建议扩展构建依赖项而不是完全禁用构建隔离，因为后一种方法要求构建依赖项在安装包本身*之前*安装在项目环境中，这可能导致更复杂的安装步骤、项目环境中包含无关的包，以及在其他上下文中重现项目环境时遇到困难。
 
-### Augmenting build dependencies
+### 扩展构建依赖项
 
-To augment the list of build dependencies for a specific package, add it to the
-[`extra-build-dependencies`](../../reference/settings.md#extra-build-dependencies) list in your
-`pyproject.toml`.
+要为特定包扩展构建依赖项列表，请将其添加到 `pyproject.toml` 中的 [`extra-build-dependencies`](../../reference/settings.md#extra-build-dependencies) 列表中。
 
-For example, to build `cchardet` with `cython` as an additional build dependency, include the
-following in your `pyproject.toml`:
+例如，要使用 `cython` 作为额外的构建依赖项来构建 `cchardet`，请在 `pyproject.toml` 中包含以下内容：
 
 ```toml title="pyproject.toml"
 [project]
@@ -254,10 +190,7 @@ dependencies = ["cchardet"]
 cchardet = ["cython"]
 ```
 
-To ensure that a build dependency matches the version of the package that is or will be installed in
-the project environment, set `match-runtime = true` in the `extra-build-dependencies` table. For
-example, to build `deepspeed` with `torch` as an additional build dependency, include the following
-in your `pyproject.toml`:
+为了确保构建依赖项与项目环境中安装或将要安装的包版本匹配，请在 `extra-build-dependencies` 表中设置 `match-runtime = true`。例如，要使用 `torch` 作为额外的构建依赖项来构建 `deepspeed`，请在 `pyproject.toml` 中包含以下内容：
 
 ```toml title="pyproject.toml"
 [project]
@@ -272,11 +205,9 @@ dependencies = ["deepspeed", "torch"]
 deepspeed = [{ requirement = "torch", match-runtime = true }]
 ```
 
-This will ensure that `deepspeed` is built with the same version of `torch` that is installed in the
-project environment.
+这将确保 `deepspeed` 使用与项目环境中安装的相同版本的 `torch` 进行构建。
 
-Similarly, to build `flash-attn` with `torch` as an additional build dependency, include the
-following in your `pyproject.toml`:
+类似地，要使用 `torch` 作为额外的构建依赖项来构建 `flash-attn`，请在 `pyproject.toml` 中包含以下内容：
 
 ```toml title="pyproject.toml"
 [project]
@@ -296,13 +227,9 @@ flash-attn = { FLASH_ATTENTION_SKIP_CUDA_BUILD = "TRUE" }
 
 !!! note
 
-    The `FLASH_ATTENTION_SKIP_CUDA_BUILD` environment variable ensures that `flash-attn` is installed
-    from a compatible, pre-built wheel, rather than attempting to build it from source, which requires
-    access to the CUDA development toolkit. If the CUDA toolkit is not available, the environment variable
-    can be omitted, and `flash-attn` will be installed from a pre-built wheel if one is available for the
-    current platform, Python version, and PyTorch version.
+    `FLASH_ATTENTION_SKIP_CUDA_BUILD` 环境变量确保 `flash-attn` 从兼容的预构建 wheel 安装，而不是尝试从源代码构建，后者需要访问 CUDA 开发工具包。如果 CUDA 工具包不可用，可以省略环境变量，`flash-attn` 将根据当前平台、Python 版本和 PyTorch 版本的可用性从预构建 wheel 安装。
 
-Similarly, [`deep_gemm`](https://github.com/deepseek-ai/DeepGEMM) follows the same pattern:
+类似地，[`deep_gemm`](https://github.com/deepseek-ai/DeepGEMM) 遵循相同的模式：
 
 ```toml title="pyproject.toml"
 [project]
@@ -320,30 +247,17 @@ deep_gemm = { git = "https://github.com/deepseek-ai/DeepGEMM" }
 deep_gemm = [{ requirement = "torch", match-runtime = true }]
 ```
 
-The use of `extra-build-dependencies` and `extra-build-variables` are tracked in the uv cache, such
-that changes to these settings will trigger a reinstall and rebuild of the affected packages. For
-example, in the case of `flash-attn`, upgrading the version of `torch` used in your project would
-subsequently trigger a rebuild of `flash-attn` with the new version of `torch`.
+`extra-build-dependencies` 和 `extra-build-variables` 的使用在 uv 缓存中被跟踪，因此对这些设置的更改将触发受影响包的重新安装和重新构建。例如，在 `flash-attn` 的情况下，升级项目中使用的 `torch` 版本将随后触发使用新版本 `torch` 重新构建 `flash-attn`。
 
-#### Dynamic metadata
+#### 动态元数据
 
-The use of `match-runtime = true` is only available for packages like `flash-attn` that declare
-static metadata. If static metadata is unavailable, uv is required to build the package during the
-dependency resolution phase; as such, uv cannot determine the version of the build dependency that
-would ultimately be installed in the project environment.
+`match-runtime = true` 的使用仅适用于声明静态元数据的包，如 `flash-attn`。如果静态元数据不可用，uv 需要在依赖项解析阶段构建包；因此，uv 无法确定最终将安装在项目环境中的构建依赖项的版本。
 
-In other words, if `flash-attn` did not declare static metadata, uv would not be able to determine
-the version of `torch` that would be installed in the project environment, since it would need to
-build `flash-attn` prior to resolving the `torch` version.
+换句话说，如果 `flash-attn` 没有声明静态元数据，uv 将无法确定将安装在项目环境中的 `torch` 版本，因为它需要在解析 `torch` 版本之前构建 `flash-attn`。
 
-As a concrete example, [`axolotl`](https://pypi.org/project/axolotl/) is a popular package that
-requires augmented build dependencies, but does not declare static metadata, as the package's
-dependencies vary based on the version of `torch` that is installed in the project environment. In
-this case, users should instead specify the exact version of `torch` that they intend to use in
-their project, and then augment the build dependencies with that version.
+作为一个具体示例，[`axolotl`](https://pypi.org/project/axolotl/) 是一个需要扩展构建依赖项的流行包，但没有声明静态元数据，因为包的依赖项根据项目环境中安装的 `torch` 版本而变化。在这种情况下，用户应改为指定他们打算在项目中使用的 `torch` 的确切版本，然后用该版本扩展构建依赖项。
 
-For example, to build `axolotl` against `torch==2.6.0`, include the following in your
-`pyproject.toml`:
+例如，要针对 `torch==2.6.0` 构建 `axolotl`，请在 `pyproject.toml` 中包含以下内容：
 
 ```toml title="pyproject.toml"
 [project]
@@ -360,13 +274,7 @@ deepspeed = ["torch==2.6.0"]
 flash-attn = ["torch==2.6.0"]
 ```
 
-Similarly, older versions of `flash-attn` did not declare static metadata, and thus would not have
-supported `match-runtime = true` out of the box. Unlike `axolotl`, though, `flash-attn` did not vary
-its dependencies based on dynamic properties of the build environment. As such, users could instead
-provide the `flash-attn` metadata upfront via the
-[`dependency-metadata`](../../reference/settings.md#dependency-metadata) setting, thereby forgoing
-the need to build the package during the dependency resolution phase. For example, to provide the
-`flash-attn` metadata upfront:
+类似地，旧版本的 `flash-attn` 没有声明静态元数据，因此开箱即用地不支持 `match-runtime = true`。但与 `axolotl` 不同，`flash-attn` 没有根据构建环境的动态属性改变其依赖项。因此，用户可以通过 [`dependency-metadata`](../../reference/settings.md#dependency-metadata) 设置预先提供 `flash-attn` 元数据，从而避免在依赖项解析阶段构建包的需要。例如，要预先提供 `flash-attn` 元数据：
 
 ```toml title="pyproject.toml"
 [[tool.uv.dependency-metadata]]
@@ -377,26 +285,17 @@ requires-dist = ["torch", "einops"]
 
 !!! tip
 
-    To determine the package metadata for a package like `flash-attn`, navigate to the appropriate Git repository,
-    or look it up on [PyPI](https://pypi.org/project/flash-attn) and download the package's source distribution.
-    The package requirements can typically be found in the `setup.py` or `setup.cfg` file.
+    要确定像 `flash-attn` 这样的包的包元数据，请导航到相应的 Git 存储库，或在 [PyPI](https://pypi.org/project/flash-attn) 上查找并下载包的源发行版。包要求通常可以在 `setup.py` 或 `setup.cfg` 文件中找到。
 
-    (If the package includes a built distribution, you can unzip it to find the `METADATA` file; however, the presence
-    of a built distribution would negate the need to provide the metadata upfront, since it would already be available
-    to uv.)
+    （如果包包含构建发行版，您可以解压缩它以找到 `METADATA` 文件；但是，构建发行版的存在将消除预先提供元数据的需要，因为它已经对 uv 可用。）
 
-    The `version` field in `tool.uv.dependency-metadata` is optional for registry-based
-    dependencies (when omitted, uv will assume the metadata applies to all versions of the package),
-    but _required_ for direct URL dependencies (like Git dependencies).
+    `tool.uv.dependency-metadata` 中的 `version` 字段对于基于注册表的依赖项是可选的（当省略时，uv 将假定元数据适用于包的所有版本），但对于直接 URL 依赖项（如 Git 依赖项）是*必需的*。
 
-### Disabling build isolation
+### 禁用构建隔离
 
-Installing packages without build isolation requires that the package's build dependencies are
-installed in the project environment _prior_ to building the package itself.
+在没有构建隔离的情况下安装包要求包的构建依赖项在构建包本身*之前*安装在项目环境中。
 
-For example, historically, to install `cchardet` without build isolation, you would first need to
-install the `cython` and `setuptools` packages in the project environment, followed by a separate
-invocation to install `cchardet` without build isolation:
+例如，历史上，要在没有构建隔离的情况下安装 `cchardet`，您首先需要将 `cython` 和 `setuptools` 包安装在项目环境中，然后使用单独的命令在没有构建隔离的情况下安装 `cchardet`：
 
 ```console
 $ uv venv
@@ -404,16 +303,9 @@ $ uv pip install cython setuptools
 $ uv pip install cchardet --no-build-isolation
 ```
 
-uv simplifies this process by allowing you to specify packages that should not be built in isolation
-via the `no-build-isolation-package` setting in your `pyproject.toml` and the
-`--no-build-isolation-package` flag in the command line. Further, when a package is marked for
-disabling build isolation, uv will perform a two-phase install, first installing any packages that
-support build isolation, followed by those that do not. As a result, if a project's build
-dependencies are included as project dependencies, uv will automatically install them before
-installing the package that requires build isolation to be disabled.
+uv 通过允许您通过 `pyproject.toml` 中的 `no-build-isolation-package` 设置和命令行中的 `--no-build-isolation-package` 标志指定不应在隔离环境中构建的包来简化此过程。此外，当包被标记为禁用构建隔离时，uv 将执行两阶段安装，首先安装任何支持构建隔离的包，然后安装那些不支持构建隔离的包。因此，如果项目的构建依赖项作为项目依赖项包含在内，uv 将在安装需要禁用构建隔离的包之前自动安装它们。
 
-For example, to install `cchardet` without build isolation, include the following in your
-`pyproject.toml`:
+例如，要在没有构建隔离的情况下安装 `cchardet`，请在 `pyproject.toml` 中包含以下内容：
 
 ```toml title="pyproject.toml"
 [project]
@@ -428,8 +320,7 @@ dependencies = ["cchardet", "cython", "setuptools"]
 no-build-isolation-package = ["cchardet"]
 ```
 
-When running `uv sync`, uv will first install `cython` and `setuptools` in the project environment,
-followed by `cchardet` (without build isolation):
+当运行 `uv sync` 时，uv 将首先在项目环境中安装 `cython` 和 `setuptools`，然后安装 `cchardet`（没有构建隔离）：
 
 ```console
 $ uv sync --extra build
@@ -438,8 +329,7 @@ $ uv sync --extra build
  + setuptools==80.9.0
 ```
 
-Similarly, to install `flash-attn` without build isolation, include the following in your
-`pyproject.toml`:
+类似地，要在没有构建隔离的情况下安装 `flash-attn`，请在 `pyproject.toml` 中包含以下内容：
 
 ```toml title="pyproject.toml"
 [project]
@@ -454,21 +344,13 @@ dependencies = ["flash-attn", "torch"]
 no-build-isolation-package = ["flash-attn"]
 ```
 
-When running `uv sync`, uv will first install `torch` in the project environment, followed by
-`flash-attn` (without build isolation). As `torch` is both a project dependency and a build
-dependency, the version of `torch` is guaranteed to be consistent between the build and runtime
-environments.
+当运行 `uv sync` 时，uv 将首先在项目环境中安装 `torch`，然后安装 `flash-attn`（没有构建隔离）。由于 `torch` 既是项目依赖项又是构建依赖项，因此 `torch` 的版本在构建环境和运行时环境之间保证一致。
 
-A downside of the above approach is that it requires the build dependencies to be installed in the
-project environment, which is appropriate for `flash-attn` (which requires `torch` both at
-build-time and runtime), but not for `cchardet` (which only requires `cython` at build-time).
+上述方法的一个缺点是它要求构建依赖项安装在项目环境中，这对于 `flash-attn`（在构建时和运行时都需要 `torch`）是合适的，但对于 `cchardet`（仅在构建时需要 `cython`）则不合适。
 
-To avoid including build dependencies in the project environment, uv supports a two-step
-installation process that allows you to separate the build dependencies from the packages that
-require them.
+为了避免在项目环境中包含构建依赖项，uv 支持两步安装过程，允许您将构建依赖项与需要它们的包分开。
 
-For example, the build dependencies for `cchardet` can be isolated to an optional `build` group, as
-in:
+例如，`cchardet` 的构建依赖项可以隔离到可选的 `build` 组中，如下所示：
 
 ```toml title="pyproject.toml"
 [project]
@@ -486,8 +368,7 @@ build = ["setuptools", "cython"]
 no-build-isolation-package = ["cchardet"]
 ```
 
-Given the above, a user would first sync with the `build` optional group, and then without it to
-remove the build dependencies:
+给定上述内容，用户将首先使用 `build` 可选组同步，然后不使用它以删除构建依赖项：
 
 ```console
 $ uv sync --extra build
@@ -499,12 +380,9 @@ $ uv sync
  - setuptools==80.9.0
 ```
 
-Some packages, like `cchardet`, only require build dependencies for the _installation_ phase of
-`uv sync`. Others require their build dependencies to be present even just to resolve the project's
-dependencies during the _resolution_ phase.
+有些包，如 `cchardet`，仅在 `uv sync` 的*安装*阶段需要构建依赖项。其他包甚至在*解析*阶段解析项目依赖项时就需要其构建依赖项存在。
 
-In such cases, the build dependencies can be installed prior to running any `uv lock` or `uv sync`
-commands, using the lower lower-level `uv pip` API. For example, given:
+在这种情况下，可以使用较低级别的 `uv pip` API 在运行任何 `uv lock` 或 `uv sync` 命令之前安装构建依赖项。例如，给定：
 
 ```toml title="pyproject.toml"
 [project]
@@ -519,7 +397,7 @@ dependencies = ["flash-attn"]
 no-build-isolation-package = ["flash-attn"]
 ```
 
-You could run the following sequence of commands to sync `flash-attn`:
+您可以运行以下命令序列来同步 `flash-attn`：
 
 ```console
 $ uv venv
@@ -527,10 +405,7 @@ $ uv pip install torch setuptools
 $ uv sync
 ```
 
-Alternatively, users can instead provide the `flash-attn` metadata upfront via the
-[`dependency-metadata`](../../reference/settings.md#dependency-metadata) setting, thereby forgoing
-the need to build the package during the dependency resolution phase. For example, to provide the
-`flash-attn` metadata upfront:
+或者，用户可以通过 [`dependency-metadata`](../../reference/settings.md#dependency-metadata) 设置预先提供 `flash-attn` 元数据，从而避免在依赖项解析阶段构建包的需要。例如，要预先提供 `flash-attn` 元数据：
 
 ```toml title="pyproject.toml"
 [[tool.uv.dependency-metadata]]
@@ -539,22 +414,15 @@ version = "2.6.3"
 requires-dist = ["torch", "einops"]
 ```
 
-## Editable mode
+## 可编辑模式
 
-By default, the project will be installed in editable mode, such that changes to the source code are
-immediately reflected in the environment. `uv sync` and `uv run` both accept a `--no-editable` flag,
-which instructs uv to install the project in non-editable mode. `--no-editable` is intended for
-deployment use-cases, such as building a Docker container, in which the project should be included
-in the deployed environment without a dependency on the originating source code.
+默认情况下，项目将以可编辑模式安装，这样对源代码的更改会立即反映在环境中。`uv sync` 和 `uv run` 都接受 `--no-editable` 标志，该标志指示 uv 以不可编辑模式安装项目。`--no-editable` 用于部署用例，例如构建 Docker 容器，其中项目应包含在部署环境中，而不依赖于原始源代码。
 
-## Conflicting dependencies
+## 冲突依赖项
 
-uv resolves all project dependencies together, including optional dependencies ("extras") and
-dependency groups. If dependencies declared in one section are not compatible with those in another
-section, uv will fail to resolve the requirements of the project with an error.
+uv 一起解析所有项目依赖项，包括可选依赖项（"extras"）和依赖项组。如果在一个部分中声明的依赖项与另一个部分中的依赖项不兼容，uv 将无法解析项目的要求并报错。
 
-uv supports explicit declaration of conflicting dependency groups. For example, to declare that the
-`optional-dependency` groups `extra1` and `extra2` are incompatible:
+uv 支持显式声明冲突的依赖项组。例如，声明 `optional-dependency` 组 `extra1` 和 `extra2` 不兼容：
 
 ```toml title="pyproject.toml"
 [tool.uv]
@@ -566,7 +434,7 @@ conflicts = [
 ]
 ```
 
-Or, to declare the development dependency groups `group1` and `group2` incompatible:
+或者，声明开发依赖项组 `group1` 和 `group2` 不兼容：
 
 ```toml title="pyproject.toml"
 [tool.uv]
@@ -578,13 +446,11 @@ conflicts = [
 ]
 ```
 
-See the [resolution documentation](../resolution.md#conflicting-dependencies) for more.
+有关更多信息，请参阅[解析文档](../resolution.md#冲突依赖项)。
 
-## Limited resolution environments
+## 有限解析环境
 
-If your project supports a more limited set of platforms or Python versions, you can constrain the
-set of solved platforms via the `environments` setting, which accepts a list of PEP 508 environment
-markers. For example, to constrain the lockfile to macOS and Linux, and exclude Windows:
+如果您的项目支持更有限的平台或 Python 版本集，您可以通过 `environments` 设置来约束解决的平台集，该设置接受 PEP 508 环境标记的列表。例如，将锁文件限制为 macOS 和 Linux，并排除 Windows：
 
 ```toml title="pyproject.toml"
 [tool.uv]
@@ -594,13 +460,11 @@ environments = [
 ]
 ```
 
-See the [resolution documentation](../resolution.md#limited-resolution-environments) for more.
+有关更多信息，请参阅[解析文档](../resolution.md#有限解析环境)。
 
-## Required environments
+## 必需环境
 
-If your project _must_ support a specific platform or Python version, you can mark that platform as
-required via the `required-environments` setting. For example, to require that the project supports
-Intel macOS:
+如果您的项目*必须*支持特定的平台或 Python 版本，您可以通过 `required-environments` 设置将该平台标记为必需。例如，要求项目支持 Intel macOS：
 
 ```toml title="pyproject.toml"
 [tool.uv]
@@ -609,8 +473,6 @@ required-environments = [
 ]
 ```
 
-The `required-environments` setting is only relevant for packages that do not publish a source
-distribution (like PyTorch), as such packages can _only_ be installed on environments covered by the
-set of pre-built binary distributions (wheels) published by that package.
+`required-environments` 设置仅与不发布源发行版（如 PyTorch）的包相关，因为此类包*只能*安装在该包发布的预构建二进制发行版（wheels）集合覆盖的环境中。
 
-See the [resolution documentation](../resolution.md#required-environments) for more.
+有关更多信息，请参阅[解析文档](../resolution.md#必需环境)。

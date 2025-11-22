@@ -210,28 +210,28 @@ nav:
       - 工具: concepts/tools.md
       - Python 版本: concepts/python-versions.md
       - 配置文件: concepts/configuration-files.md
-      - Package indexes: concepts/indexes.md
-      - Resolution: concepts/resolution.md
-      - Build backend: concepts/build-backend.md
-      - Authentication:
+      - 包索引: concepts/indexes.md
+      - Resolution 解析: concepts/resolution.md
+      - 构建后端: concepts/build-backend.md
+      - 凭据:
           - concepts/authentication/index.md
-          - The auth CLI: concepts/authentication/cli.md
-          - HTTP credentials: concepts/authentication/http.md
-          - Git credentials: concepts/authentication/git.md
-          - TLS certificates: concepts/authentication/certificates.md
-          - Third-party services: concepts/authentication/third-party.md
-      - Caching: concepts/cache.md
-      - Preview features: concepts/preview.md
+          - auth CLI: concepts/authentication/cli.md
+          - HTTP 凭据: concepts/authentication/http.md
+          - Git 凭据: concepts/authentication/git.md
+          - TLS 证书: concepts/authentication/certificates.md
+          - 第三方服务: concepts/authentication/third-party.md
+      - 缓存: concepts/cache.md
+      - 预览功能: concepts/preview.md
       # Note:  The `pip` section was moved to the `concepts/` section but the
       # top-level directory structure was retained to ease the transition.
-      - The pip interface:
+      - pip 接口:
           - pip/index.md
-          - Using environments: pip/environments.md
-          - Managing packages: pip/packages.md
-          - Inspecting environments: pip/inspection.md
-          - Declaring dependencies: pip/dependencies.md
-          - Locking environments: pip/compile.md
-          - Compatibility with pip: pip/compatibility.md
+          - 使用环境: pip/environments.md
+          - 管理包: pip/packages.md
+          - 检查环境: pip/inspection.md
+          - 声明依赖: pip/dependencies.md
+          - 锁定环境: pip/compile.md
+          - 与 pip 兼容: pip/compatibility.md
   - 参考:
       - reference/index.md
       - 命令行: reference/cli.md
@@ -241,9 +241,9 @@ nav:
       - 安装配置: reference/installer.md
       - 故障问题:
           - reference/troubleshooting/index.md
-          - Build failures: reference/troubleshooting/build-failures.md
-          - Reproducible examples: reference/troubleshooting/reproducible-examples.md
-      - Internals:
+          - 构建失败: reference/troubleshooting/build-failures.md
+          - 可重复示例: reference/troubleshooting/reproducible-examples.md
+      - 内部:
           - reference/internals/index.md
           - Resolver: reference/internals/resolver.md
       - Benchmarks: reference/benchmarks.md

@@ -1,41 +1,40 @@
-# Inspecting environments
+# 环境检查
 
-## Listing installed packages
+## 列出已安装的包
 
-To list all the packages in the environment:
+列出环境中所有的包：
 
 ```console
 $ uv pip list
 ```
 
-To list the packages in a JSON format:
+以 JSON 格式列出包：
 
 ```console
 $ uv pip list --format json
 ```
 
-To list all the packages in the environment in a `requirements.txt` format:
+以 `requirements.txt` 格式列出环境中所有的包：
 
 ```console
 $ uv pip freeze
 ```
 
-## Inspecting a package
+## 检查包信息
 
-To show information about an installed package, e.g., `numpy`:
+显示已安装包的信息，例如 `numpy`：
 
 ```console
 $ uv pip show numpy
 ```
 
-Multiple packages can be inspected at once.
+可以同时检查多个包。
 
-## Verifying an environment
+## 验证环境
 
-It is possible to install packages with conflicting requirements into an environment if installed in
-multiple steps.
+如果分多个步骤安装包，可能会将存在冲突要求的包安装到同一环境中。
 
-To check for conflicts or missing dependencies in the environment:
+检查环境中的依赖冲突或缺失问题：
 
 ```console
 $ uv pip check

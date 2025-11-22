@@ -1,42 +1,38 @@
-# The `uv auth` CLI
+# `uv auth` CLI
 
-uv provides a high-level interface for storing and retrieving credentials from services.
+uv 提供了一个高级接口，用于存储和检索来自服务的凭证。
 
-## Logging in to a service
+## 登录服务
 
-To add credentials for service, use the `uv auth login` command:
+要添加服务的凭证，请使用 `uv auth login` 命令：
 
 ```console
 $ uv auth login example.com
 ```
 
-This will prompt for the credentials.
+这将提示输入凭证。
 
-The credentials can also be provided using the `--username` and `--password` options, or the
-`--token` option for services which use a `__token__` or arbitrary username.
+凭证也可以通过 `--username` 和 `--password` 选项提供，或者对于使用 `__token__` 或任意用户名的服务，可以使用 `--token` 选项提供。
 
 !!! note
 
-    We recommend providing the secret via stdin. Use `-` to indicate the value should be read from
-    stdin, e.g., for `--password`:
+    我们建议通过 stdin 提供密钥。使用 `-` 表示应从 stdin 读取值，例如，对于 `--password`：
 
     ```console
     $ echo 'my-password' | uv auth login example.com --password -
     ```
 
-    The same pattern can be used with `--token`.
+    相同的模式可用于 `--token`。
 
-Once credentials are added, uv will use them for packaging operations that require fetching content
-from the given service. At this time, only HTTPS Basic authentication is supported. The credentials
-will not yet be used for Git requests.
+添加凭证后，uv 将在需要从给定服务获取内容的打包操作中使用它们。目前，仅支持 HTTPS 基本认证。这些凭证尚不会用于 Git 请求。
 
 !!! note
 
-    The credentials will not be validated, i.e., incorrect credentials will not fail.
+    凭证不会被验证，即，不正确的凭证不会导致失败。
 
-## Logging out of a service
+## 登出服务
 
-To remove credentials, use the `uv auth logout` command:
+要移除凭证，请使用 `uv auth logout` 命令：
 
 ```console
 $ uv auth logout example.com
@@ -44,26 +40,24 @@ $ uv auth logout example.com
 
 !!! note
 
-    The credentials will not be invalidated with the remote server, i.e., they will only be removed
-    from local storage not rendered unusable.
+    凭证不会在远程服务器上失效，即，它们只会从本地存储中移除，而不会被远程作废。
 
-## Showing credentials for a service
+## 显示服务的凭证
 
-To show the credential stored for a given URL, use the `uv auth token` command:
+要显示为给定 URL 存储的凭证，请使用 `uv auth token` 命令：
 
 ```console
 $ uv auth token example.com
 ```
 
-If a username was used to log in, it will need to be provided as well, e.g.:
+如果登录时使用了用户名，则也需要提供，例如：
 
 ```console
 $ uv auth token --username foo example.com
 ```
 
-## Configuring the storage backend
+## 配置存储后端
 
-Credentials are persisted to the uv [credentials store](./http.md#the-uv-credentials-store).
+凭证将持久化到 uv [凭证存储](./http.md#the-uv-credentials-store)。
 
-By default, credentials are written to a plaintext file. An encrypted system-native storage backend
-can be enabled with `UV_PREVIEW_FEATURES=native-auth`.
+默认情况下，凭证被写入一个纯文本文件。可以通过设置 `UV_PREVIEW_FEATURES=native-auth` 来启用加密的、系统原生的存储后端。

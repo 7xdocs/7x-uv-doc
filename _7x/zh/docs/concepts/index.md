@@ -1,16 +1,16 @@
-# Concepts overview
+# 概念概述
 
-Read the concept documents to learn more about uv's features:
+阅读概念文档以了解更多关于 uv 的功能：
 
-- [Projects](./projects/index.md)
-- [Tools](./tools.md)
-- [Python versions](./python-versions.md)
-- [Configuration files](./configuration-files.md)
-- [Package indexes](./indexes.md)
-- [Resolution](./resolution.md)
-- [The uv build backend](./build-backend.md)
-- [Authentication](./authentication/index.md)
-- [Caching](./cache.md)
-- [The pip interface](../pip/index.md)
+- [项目](./projects/index.md)
+- [工具](./tools.md)
+- [Python 版本](./python-versions.md)
+- [配置文件](./configuration-files.md)
+- [包索引](./indexes.md)
+- [解析](./resolution.md)
+- [uv 构建后端](./build-backend.md)
+- [认证](./authentication/index.md)
+- [缓存](./cache.md)
+- [pip 接口](../pip/index.md)
 
-Looking for a quick introduction to features? See the [guides](../guides/index.md) instead.
+寻找功能的快速介绍？请参阅[指南](../guides/index.md)。

@@ -1,495 +1,388 @@
-# Python versions
+# Python 版本
 
-A Python version is composed of a Python interpreter (i.e. the `python` executable), the standard
-library, and other supporting files.
+一个 Python 版本由一个 Python 解释器（即 `python` 可执行文件）、标准库和其他支持文件组成。
 
-## Managed and system Python installations
+## 托管和系统 Python 安装
 
-Since it is common for a system to have an existing Python installation, uv supports
-[discovering](#discovery-of-python-versions) Python versions. However, uv also supports
-[installing Python versions](#installing-a-python-version) itself. To distinguish between these two
-types of Python installations, uv refers to Python versions it installs as _managed_ Python
-installations and all other Python installations as _system_ Python installations.
+由于系统上通常已存在 Python 安装，uv 支持[发现](#发现-python-版本) Python 版本。然而，uv 也支持自行[安装 Python 版本](#安装-python-版本)。为了区分这两种类型的 Python 安装，uv 将其自身安装的 Python 版本称为*托管* Python 安装，而所有其他 Python 安装称为*系统* Python 安装。
 
 !!! note
 
-    uv does not distinguish between Python versions installed by the operating system vs those
-    installed and managed by other tools. For example, if a Python installation is managed with
-    `pyenv`, it would still be considered a _system_ Python version in uv.
+    uv 不区分由操作系统安装的 Python 版本与由其他工具安装和管理的 Python 版本。例如，如果某个 Python 安装是由 `pyenv` 管理的，在 uv 中它仍被视为*系统* Python 版本。
 
-## Requesting a version
+## 请求版本
 
-A specific Python version can be requested with the `--python` flag in most uv commands. For
-example, when creating a virtual environment:
+在大多数 uv 命令中，可以使用 `--python` 标志请求特定的 Python 版本。例如，在创建虚拟环境时：
 
 ```console
 $ uv venv --python 3.11.6
 ```
 
-uv will ensure that Python 3.11.6 is available — downloading and installing it if necessary — then
-create the virtual environment with it.
+uv 将确保 Python 3.11.6 可用——必要时会下载并安装它——然后使用它创建虚拟环境。
 
-The following Python version request formats are supported:
+支持以下 Python 版本请求格式：
 
-- `<version>` (e.g., `3`, `3.12`, `3.12.3`)
-- `<version-specifier>` (e.g., `>=3.12,<3.13`)
-- `<version><short-variant>` (e.g., `3.13t`, `3.12.0d`)
-- `<version>+<variant>` (e.g., `3.13+freethreaded`, `3.12.0+debug`)
-- `<implementation>` (e.g., `cpython` or `cp`)
-- `<implementation>@<version>` (e.g., `cpython@3.12`)
-- `<implementation><version>` (e.g., `cpython3.12` or `cp312`)
-- `<implementation><version-specifier>` (e.g., `cpython>=3.12,<3.13`)
-- `<implementation>-<version>-<os>-<arch>-<libc>` (e.g., `cpython-3.12.3-macos-aarch64-none`)
+- `<version>`（例如：`3`, `3.12`, `3.12.3`）
+- `<version-specifier>`（例如：`>=3.12,<3.13`）
+- `<version><short-variant>`（例如：`3.13t`, `3.12.0d`）
+- `<version>+<variant>`（例如：`3.13+freethreaded`, `3.12.0+debug`）
+- `<implementation>`（例如：`cpython` 或 `cp`）
+- `<implementation>@<version>`（例如：`cpython@3.12`）
+- `<implementation><version>`（例如：`cpython3.12` 或 `cp312`）
+- `<implementation><version-specifier>`（例如：`cpython>=3.12,<3.13`）
+- `<implementation>-<version>-<os>-<arch>-<libc>`（例如：`cpython-3.12.3-macos-aarch64-none`）
 
-Additionally, a specific system Python interpreter can be requested with:
+此外，可以通过以下方式请求特定的系统 Python 解释器：
 
-- `<executable-path>` (e.g., `/opt/homebrew/bin/python3`)
-- `<executable-name>` (e.g., `mypython3`)
-- `<install-dir>` (e.g., `/some/environment/`)
+- `<executable-path>`（例如：`/opt/homebrew/bin/python3`）
+- `<executable-name>`（例如：`mypython3`）
+- `<install-dir>`（例如：`/some/environment/`）
 
-By default, uv will automatically download Python versions if they cannot be found on the system.
-This behavior can be
-[disabled with the `python-downloads` option](#disabling-automatic-python-downloads).
+默认情况下，如果在系统上找不到 Python 版本，uv 将自动下载它们。此行为可以通过 [`python-downloads` 选项](#禁用自动-python-下载)来禁用。
 
-### Python version files
+### Python 版本文件
 
-The `.python-version` file can be used to create a default Python version request. uv searches for a
-`.python-version` file in the working directory and each of its parents. If none is found, uv will
-check the user-level configuration directory. Any of the request formats described above can be
-used, though use of a version number is recommended for interoperability with other tools.
+`.python-version` 文件可用于创建默认的 Python 版本请求。uv 在工作目录及其每个父目录中搜索 `.python-version` 文件。如果未找到，uv 将检查用户级配置目录。可以使用上述任何请求格式，但为了与其他工具互操作，建议使用版本号。
 
-A `.python-version` file can be created in the current directory with the
-[`uv python pin`](../reference/cli.md/#uv-python-pin) command.
+可以使用 [`uv python pin`](../reference/cli.md/#uv-python-pin) 命令在当前目录创建 `.python-version` 文件。
 
-A global `.python-version` file can be created in the user configuration directory with the
-[`uv python pin --global`](../reference/cli.md/#uv-python-pin) command.
+可以使用 [`uv python pin --global`](../reference/cli.md/#uv-python-pin) 命令在用户配置目录中创建全局 `.python-version` 文件。
 
-Discovery of `.python-version` files can be disabled with `--no-config`.
+可以使用 `--no-config` 禁用对 `.python-version` 文件的发现。
 
-uv will not search for `.python-version` files beyond project or workspace boundaries (except the
-user configuration directory).
+uv 不会跨越项目或工作区边界（用户配置目录除外）搜索 `.python-version` 文件。
 
-## Installing a Python version
+## 安装 Python 版本
 
-uv bundles a list of downloadable CPython and PyPy distributions for macOS, Linux, and Windows.
+uv 捆绑了一份可下载的 CPython 和 PyPy 发行版列表，适用于 macOS、Linux 和 Windows。
 
 !!! tip
 
-    By default, Python versions are automatically downloaded as needed without using
-    `uv python install`.
+    默认情况下，Python 版本会在需要时自动下载，而无需使用 `uv python install`。
 
-To install a Python version at a specific version:
+要安装特定版本的 Python 版本：
 
 ```console
 $ uv python install 3.12.3
 ```
 
-To install the latest patch version:
+要安装最新的补丁版本：
 
 ```console
 $ uv python install 3.12
 ```
 
-To install a version that satisfies constraints:
+要安装满足约束条件的版本：
 
 ```console
 $ uv python install '>=3.8,<3.10'
 ```
 
-To install multiple versions:
+要安装多个版本：
 
 ```console
 $ uv python install 3.9 3.10 3.11
 ```
 
-To install a specific implementation:
+要安装特定的实现：
 
 ```console
 $ uv python install pypy
 ```
 
-All the [Python version request](#requesting-a-version) formats are supported except those that are
-used for requesting local interpreters such as a file path.
+所有 [Python 版本请求](#请求版本) 格式都受支持，除了那些用于请求本地解释器的格式（如文件路径）。
 
-By default `uv python install` will verify that a managed Python version is installed or install the
-latest version. If a `.python-version` file is present, uv will install the Python version listed in
-the file. A project that requires multiple Python versions may define a `.python-versions` file. If
-present, uv will install all the Python versions listed in the file.
+默认情况下，`uv python install` 将验证是否安装了托管的 Python 版本，或者安装最新版本。如果存在 `.python-version` 文件，uv 将安装该文件中列出的 Python 版本。需要多个 Python 版本的项目可以定义一个 `.python-versions` 文件。如果存在，uv 将安装该文件中列出的所有 Python 版本。
 
 !!! important
 
-    The available Python versions are frozen for each uv release. To install new Python versions,
-    you may need upgrade uv.
+    可用的 Python 版本在每个 uv 发布版本中是固定的。要安装新的 Python 版本，您可能需要升级 uv。
 
-See the [storage documentation](../reference/storage.md#python-versions) for details about where
-installed Python versions are stored.
+有关已安装 Python 版本存储位置的详细信息，请参阅[存储文档](../reference/storage.md#python-versions)。
 
-### Installing Python executables
+### 安装 Python 可执行文件
 
-uv installs Python executables into your `PATH` by default, e.g., on Unix `uv python install 3.12`
-will install a Python executable into `~/.local/bin`, e.g., as `python3.12`. See the
-[storage documentation](../reference/storage.md#python-executables) for more details about the
-target directory.
+uv 默认将 Python 可执行文件安装到您的 `PATH` 中，例如，在 Unix 上，`uv python install 3.12` 将把一个 Python 可执行文件安装到 `~/.local/bin`，例如 `python3.12`。有关目标目录的更多详细信息，请参阅[存储文档](../reference/storage.md#python-executables)。
 
 !!! tip
 
-    If `~/.local/bin` is not in your `PATH`, you can add it with `uv tool update-shell`.
+    如果 `~/.local/bin` 不在您的 `PATH` 中，您可以使用 `uv tool update-shell` 添加它。
 
-To install `python` and `python3` executables, include the experimental `--default` option:
+要安装 `python` 和 `python3` 可执行文件，请包含实验性的 `--default` 选项：
 
 ```console
 $ uv python install 3.12 --default
 ```
 
-When installing Python executables, uv will only overwrite an existing executable if it is managed
-by uv — e.g., if `~/.local/bin/python3.12` exists already uv will not overwrite it without the
-`--force` flag.
+在安装 Python 可执行文件时，uv 仅当现有可执行文件由 uv 管理时才会覆盖它——例如，如果 `~/.local/bin/python3.12` 已存在，没有 `--force` 标志，uv 将不会覆盖它。
 
-uv will update executables that it manages. However, it will prefer the latest patch version of each
-Python minor version by default. For example:
+uv 会更新其管理的可执行文件。但是，默认情况下，它会优先选择每个 Python 次要版本的最新补丁版本。例如：
 
 ```console
-$ uv python install 3.12.7  # Adds `python3.12` to `~/.local/bin`
-$ uv python install 3.12.6  # Does not update `python3.12`
-$ uv python install 3.12.8  # Updates `python3.12` to point to 3.12.8
+$ uv python install 3.12.7  # 添加 `python3.12` 到 `~/.local/bin`
+$ uv python install 3.12.6  # 不更新 `python3.12`
+$ uv python install 3.12.8  # 将 `python3.12` 更新为指向 3.12.8
 ```
 
-## Upgrading Python versions
+## 升级 Python 版本
 
 !!! important
 
-    Support for upgrading Python versions is in _preview_. This means the behavior is experimental
-    and subject to change.
+    对升级 Python 版本的支持处于*预览*阶段。这意味着该行为是实验性的，可能会发生变化。
 
-    Upgrades are only supported for uv-managed Python versions.
+    升级仅支持 uv 托管的 Python 版本。
 
-    Upgrades are not currently supported for PyPy and GraalPy.
+    目前不支持升级 PyPy 和 GraalPy。
 
-uv allows transparently upgrading Python versions to the latest patch release, e.g., 3.13.4 to
-3.13.5. uv does not allow transparently upgrading across minor Python versions, e.g., 3.12 to 3.13,
-because changing minor versions can affect dependency resolution.
+uv 允许透明地将 Python 版本升级到最新的补丁版本，例如，从 3.13.4 升级到 3.13.5。uv 不允许透明地跨次要 Python 版本升级，例如从 3.12 升级到 3.13，因为更改次要版本可能会影响依赖项解析。
 
-uv-managed Python versions can be upgraded to the latest supported patch release with the
-`python upgrade` command:
+可以使用 `python upgrade` 命令将 uv 托管的 Python 版本升级到最新的受支持补丁版本：
 
-To upgrade a Python version to the latest supported patch release:
+要将 Python 版本升级到最新的受支持补丁版本：
 
 ```console
 $ uv python upgrade 3.12
 ```
 
-To upgrade all installed Python versions:
+要升级所有已安装的 Python 版本：
 
 ```console
 $ uv python upgrade
 ```
 
-After an upgrade, uv will prefer the new version, but will retain the existing version as it may
-still be used by virtual environments.
+升级后，uv 将优先使用新版本，但会保留现有版本，因为它可能仍被虚拟环境使用。
 
-If the Python version was installed with the `python-upgrade` [preview feature](./preview.md)
-enabled, e.g., `uv python install 3.12 --preview-features python-upgrade`, virtual environments
-using the Python version will be automatically upgraded to the new patch version.
+如果 Python 版本是在启用了 `python-upgrade` [预览功能](./preview.md)的情况下安装的，例如 `uv python install 3.12 --preview-features python-upgrade`，则使用该 Python 版本的虚拟环境将自动升级到新的补丁版本。
 
 !!! note
 
-    If the virtual environment was created _before_ opting in to the preview mode, it will not be
-    included in the automatic upgrades.
+    如果在选择加入预览模式*之前*创建了虚拟环境，则它不会被包含在自动升级中。
 
-If a virtual environment was created with an explicitly requested patch version, e.g.,
-`uv venv -p 3.10.8`, it will not be transparently upgraded to a new version.
+如果虚拟环境是使用明确请求的补丁版本创建的，例如 `uv venv -p 3.10.8`，则它不会被透明地升级到新版本。
 
-### Minor version directories
+### 次要版本目录
 
-Automatic upgrades for virtual environments are implemented using a directory with the Python minor
-version, e.g.:
+虚拟环境的自动升级是通过使用 Python 次要版本的目录实现的，例如：
 
 ```
 ~/.local/share/uv/python/cpython-3.12-macos-aarch64-none
 ```
 
-which is a symbolic link (on Unix) or junction (on Windows) pointing to a specific patch version:
+这是一个指向特定补丁版本的符号链接（在 Unix 上）或交接点（在 Windows 上）：
 
 ```console
 $ readlink ~/.local/share/uv/python/cpython-3.12-macos-aarch64-none
 ~/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none
 ```
 
-If this link is resolved by another tool, e.g., by canonicalizing the Python interpreter path, and
-used to create a virtual environment, it will not be automatically upgraded.
+如果此链接被其他工具解析（例如，通过规范化 Python 解释器路径）并用于创建虚拟环境，则它不会被自动升级。
 
-## Project Python versions
+## 项目 Python 版本
 
-uv will respect Python requirements defined in `requires-python` in the `pyproject.toml` file during
-project command invocations. The first Python version that is compatible with the requirement will
-be used, unless a version is otherwise requested, e.g., via a `.python-version` file or the
-`--python` flag.
+在项目命令调用期间，uv 将遵循 `pyproject.toml` 文件中 `requires-python` 定义的 Python 要求。将使用第一个符合要求的 Python 版本，除非通过其他方式（例如通过 `.python-version` 文件或 `--python` 标志）请求了特定版本。
 
-## Viewing available Python versions
+## 查看可用的 Python 版本
 
-To list installed and available Python versions:
+要列出已安装和可用的 Python 版本：
 
 ```console
 $ uv python list
 ```
 
-To filter the Python versions, provide a request, e.g., to show all Python 3.13 interpreters:
+要过滤 Python 版本，请提供一个请求，例如，显示所有 Python 3.13 解释器：
 
 ```console
 $ uv python list 3.13
 ```
 
-Or, to show all PyPy interpreters:
+或者，显示所有 PyPy 解释器：
 
 ```console
 $ uv python list pypy
 ```
 
-By default, downloads for other platforms and old patch versions are hidden.
+默认情况下，会隐藏其他平台和旧补丁版本的下载项。
 
-To view all versions:
+要查看所有版本：
 
 ```console
 $ uv python list --all-versions
 ```
 
-To view Python versions for other platforms:
+要查看其他平台的 Python 版本：
 
 ```console
 $ uv python list --all-platforms
 ```
 
-To exclude downloads and only show installed Python versions:
+要排除下载项，仅显示已安装的 Python 版本：
 
 ```console
 $ uv python list --only-installed
 ```
 
-See the [`uv python list`](../reference/cli.md#uv-python-list) reference for more details.
+有关更多详细信息，请参阅 [`uv python list`](../reference/cli.md#uv-python-list) 参考。
 
-## Finding a Python executable
+## 查找 Python 可执行文件
 
-To find a Python executable, use the `uv python find` command:
+要查找 Python 可执行文件，请使用 `uv python find` 命令：
 
 ```console
 $ uv python find
 ```
 
-By default, this will display the path to the first available Python executable. See the
-[discovery rules](#discovery-of-python-versions) for details about how executables are discovered.
+默认情况下，这将显示第一个可用的 Python 可执行文件的路径。有关如何发现可执行文件的详细信息，请参阅[发现规则](#发现-python-版本)。
 
-This interface also supports many [request formats](#requesting-a-version), e.g., to find a Python
-executable that has a version of 3.11 or newer:
+此接口还支持许多[请求格式](#请求版本)，例如，查找版本为 3.11 或更高版本的 Python 可执行文件：
 
 ```console
 $ uv python find '>=3.11'
 ```
 
-By default, `uv python find` will include Python versions from virtual environments. If a `.venv`
-directory is found in the working directory or any of the parent directories or the `VIRTUAL_ENV`
-environment variable is set, it will take precedence over any Python executables on the `PATH`.
+默认情况下，`uv python find` 将包含来自虚拟环境的 Python 版本。如果在工作目录或任何父目录中找到 `.venv` 目录，或者设置了 `VIRTUAL_ENV` 环境变量，它将优先于 `PATH` 上的任何 Python 可执行文件。
 
-To ignore virtual environments, use the `--system` flag:
+要忽略虚拟环境，请使用 `--system` 标志：
 
 ```console
 $ uv python find --system
 ```
 
-## Discovery of Python versions
+## 发现 Python 版本
 
-When searching for a Python version, the following locations are checked:
+搜索 Python 版本时，会检查以下位置：
 
-- Managed Python installations in the `UV_PYTHON_INSTALL_DIR`.
-- A Python interpreter on the `PATH` as `python`, `python3`, or `python3.x` on macOS and Linux, or
-  `python.exe` on Windows.
-- On Windows, the Python interpreters in the Windows registry and Microsoft Store Python
-  interpreters (see `py --list-paths`) that match the requested version.
+- `UV_PYTHON_INSTALL_DIR` 中的托管 Python 安装。
+- `PATH` 上名为 `python`、`python3` 或 `python3.x`（在 macOS 和 Linux 上）或 `python.exe`（在 Windows 上）的 Python 解释器。
+- 在 Windows 上，Windows 注册表中的 Python 解释器和 Microsoft Store Python 解释器（参见 `py --list-paths`）中与请求版本匹配的解释器。
 
-In some cases, uv allows using a Python version from a virtual environment. In this case, the
-virtual environment's interpreter will be checked for compatibility with the request before
-searching for an installation as described above. See the
-[pip-compatible virtual environment discovery](../pip/environments.md#discovery-of-python-environments)
-documentation for details.
+在某些情况下，uv 允许使用来自虚拟环境的 Python 版本。在这种情况下，将在按照上述描述搜索安装之前，检查虚拟环境的解释器是否与请求兼容。有关详细信息，请参阅 [pip 兼容的虚拟环境发现](../pip/environments.md#discovery-of-python-environments) 文档。
 
-When performing discovery, non-executable files will be ignored. Each discovered executable is
-queried for metadata to ensure it meets the [requested Python version](#requesting-a-version). If
-the query fails, the executable will be skipped. If the executable satisfies the request, it is used
-without inspecting additional executables.
+在执行发现时，将忽略不可执行的文件。每个发现的解释器都会被查询元数据，以确保其满足[请求的 Python 版本](#请求版本)。如果查询失败，将跳过该解释器。如果解释器满足请求，则使用它而不再检查其他解释器。
 
-When searching for a managed Python version, uv will prefer newer versions first. When searching for
-a system Python version, uv will use the first compatible version — not the newest version.
+在搜索托管的 Python 版本时，uv 会优先选择较新的版本。在搜索系统 Python 版本时，uv 将使用第一个兼容的版本——而不是最新的版本。
 
-If a Python version cannot be found on the system, uv will check for a compatible managed Python
-version download.
+如果在系统上找不到 Python 版本，uv 将检查是否有兼容的托管 Python 版本可供下载。
 
-## Python pre-releases
+## Python 预发布版本
 
-Python pre-releases will not be selected by default. Python pre-releases will be used if there is no
-other available installation matching the request. For example, if only a pre-release version is
-available it will be used but otherwise a stable release version will be used. Similarly, if the
-path to a pre-release Python executable is provided then no other Python version matches the request
-and the pre-release version will be used.
+默认情况下不会选择 Python 预发布版本。如果没有其他可用的安装匹配请求，则将使用 Python 预发布版本。例如，如果只有预发布版本可用，则将使用它，否则将使用稳定发布版本。类似地，如果提供了预发布 Python 可执行文件的路径，并且没有其他 Python 版本匹配该请求，则将使用预发布版本。
 
-If a pre-release Python version is available and matches the request, uv will not download a stable
-Python version instead.
+如果有可用的预发布 Python 版本且匹配请求，uv 不会转而下载稳定的 Python 版本。
 
-## Free-threaded Python
+## 自由线程 Python
 
-uv supports discovering and installing
-[free-threaded](https://docs.python.org/3.14/glossary.html#term-free-threading) Python variants in
-CPython 3.13+.
+uv 支持在 CPython 3.13+ 中发现和安装[自由线程](https://docs.python.org/3.14/glossary.html#term-free-threading) Python 变体。
 
-Free-threaded Python versions will not be selected by default. Free-threaded Python versions will
-only be selected when explicitly requested, e.g., with `3.13t` or `3.13+freethreaded`.
+默认情况下不会选择自由线程 Python 版本。仅当明确请求时，例如使用 `3.13t` 或 `3.13+freethreaded`，才会选择自由线程 Python 版本。
 
-## Debug Python variants
+## 调试 Python 变体
 
-uv supports discovering and installing
-[debug builds](https://docs.python.org/3.14/using/configure.html#debug-build) of Python, i.e., with
-debug assertions enabled.
+uv 支持发现和安装 Python 的[调试版本](https://docs.python.org/3.14/using/configure.html#debug-build)，即启用了调试断言。
 
 !!! important
 
-    Debug builds of Python are slower and are not appropriate for general use.
+    Python 的调试版本速度较慢，不适合一般用途。
 
-Debug builds will be used if there is no other available installation matching the request. For
-example, if only a debug version is available it will be used but otherwise a stable release version
-will be used. Similarly, if the path to a debug Python executable is provided then no other Python
-version matches the request and the debug version will be used.
+如果没有其他可用的安装匹配请求，则将使用调试版本。例如，如果只有调试版本可用，则将使用它，否则将使用稳定发布版本。类似地，如果提供了调试 Python 可执行文件的路径，并且没有其他 Python 版本匹配该请求，则将使用调试版本。
 
-Debug builds of Python can be explicitly requested with, e.g., `3.13d` or `3.13+debug`.
+可以使用例如 `3.13d` 或 `3.13+debug` 明确请求 Python 的调试版本。
 
 !!! note
 
-    CPython versions installed by uv usually have debug symbols stripped to reduce the distribution
-    size. These debug builds do not have debug symbols stripped, which can be useful when debugging
-    Python processes with a C-level debugger.
+    由 uv 安装的 CPython 版本通常会剥离调试符号以减小分发大小。这些调试版本没有剥离调试符号，这在用 C 级调试器调试 Python 进程时可能很有用。
 
-## Disabling automatic Python downloads
+## 禁用自动 Python 下载
 
-By default, uv will automatically download Python versions when needed.
+默认情况下，uv 会在需要时自动下载 Python 版本。
 
-The [`python-downloads`](../reference/settings.md#python-downloads) option can be used to disable
-this behavior. By default, it is set to `automatic`; set to `manual` to only allow Python downloads
-during `uv python install`.
+可以使用 [`python-downloads`](../reference/settings.md#python-downloads) 选项禁用此行为。默认情况下，它设置为 `automatic`；设置为 `manual` 以仅允许在 `uv python install` 期间下载 Python。
 
 !!! tip
 
-    The `python-downloads` setting can be set in a
-    [persistent configuration file](./configuration-files.md) to change the default behavior, or
-    the `--no-python-downloads` flag can be passed to any uv command.
+    `python-downloads` 设置可以在[持久性配置文件](./configuration-files.md)中设置以更改默认行为，或者可以将 `--no-python-downloads` 标志传递给任何 uv 命令。
 
-## Requiring or disabling managed Python versions
+## 要求或禁用托管的 Python 版本
 
-By default, uv will attempt to use Python versions found on the system and only download managed
-Python versions when necessary. To ignore system Python versions, and only use managed Python
-versions, use the `--managed-python` flag:
+默认情况下，uv 将尝试使用系统上找到的 Python 版本，仅在必要时下载托管的 Python 版本。要忽略系统 Python 版本，并仅使用托管的 Python 版本，请使用 `--managed-python` 标志：
 
 ```console
 $ uv python list --managed-python
 ```
 
-Similarly, to ignore managed Python versions and only use system Python versions, use the
-`--no-managed-python` flag:
+类似地，要忽略托管的 Python 版本并仅使用系统 Python 版本，请使用 `--no-managed-python` 标志：
 
 ```console
 $ uv python list --no-managed-python
 ```
 
-To change uv's default behavior in a configuration file, use the
-[`python-preference` setting](#adjusting-python-version-preferences).
+要在配置文件中更改 uv 的默认行为，请使用 [`python-preference` 设置](#调整-python-版本偏好)。
 
-## Adjusting Python version preferences
+## 调整 Python 版本偏好
 
-The [`python-preference`](../reference/settings.md#python-preference) setting determines whether to
-prefer using Python installations that are already present on the system, or those that are
-downloaded and installed by uv.
+[`python-preference`](../reference/settings.md#python-preference) 设置决定是优先使用系统上已有的 Python 安装，还是优先使用由 uv 下载和安装的 Python 安装。
 
-By default, the `python-preference` is set to `managed` which prefers managed Python installations
-over system Python installations. However, system Python installations are still preferred over
-downloading a managed Python version.
+默认情况下，`python-preference` 设置为 `managed`，它优先选择托管的 Python 安装而不是系统的 Python 安装。但是，系统的 Python 安装仍然优先于下载托管的 Python 版本。
 
-The following alternative options are available:
+以下替代选项可用：
 
-- `only-managed`: Only use managed Python installations; never use system Python installations.
-  Equivalent to `--managed-python`.
-- `system`: Prefer system Python installations over managed Python installations.
-- `only-system`: Only use system Python installations; never use managed Python installations.
-  Equivalent to `--no-managed-python`.
+- `only-managed`：仅使用托管的 Python 安装；绝不使用系统的 Python 安装。等同于 `--managed-python`。
+- `system`：优先选择系统的 Python 安装而不是托管的 Python 安装。
+- `only-system`：仅使用系统的 Python 安装；绝不使用托管的 Python 安装。等同于 `--no-managed-python`。
 
 !!! note
 
-    Automatic Python version downloads can be [disabled](#disabling-automatic-python-downloads)
-    without changing the preference.
+    可以在不更改偏好的情况下[禁用](#禁用自动-python-下载)自动 Python 版本下载。
 
-## Python implementation support
+## Python 实现支持
 
-uv supports the CPython, PyPy, Pyodide, and GraalPy Python implementations. If a Python
-implementation is not supported, uv will fail to discover its interpreter.
+uv 支持 CPython、PyPy、Pyodide 和 GraalPy Python 实现。如果某个 Python 实现不受支持，uv 将无法发现其解释器。
 
-The implementations may be requested with either the long or short name:
+可以使用长名称或短名称请求实现：
 
 - CPython: `cpython`, `cp`
 - PyPy: `pypy`, `pp`
 - GraalPy: `graalpy`, `gp`
 - Pyodide: `pyodide`
 
-Implementation name requests are not case-sensitive.
+实现名称的请求不区分大小写。
 
-See the [Python version request](#requesting-a-version) documentation for more details on the
-supported formats.
+有关支持的格式的更多详细信息，请参阅 [Python 版本请求](#请求版本) 文档。
 
-## Managed Python distributions
+## 托管的 Python 发行版
 
-uv supports downloading and installing CPython, PyPy, and Pyodide distributions.
+uv 支持下载和安装 CPython、PyPy 和 Pyodide 发行版。
 
-### CPython distributions
+### CPython 发行版
 
-As Python does not publish official distributable CPython binaries, uv instead uses pre-built
-distributions from the Astral
-[`python-build-standalone`](https://github.com/astral-sh/python-build-standalone) project.
-`python-build-standalone` is also is used in many other Python projects, like
-[Mise](https://mise.jdx.dev/lang/python.html) and
-[bazelbuild/rules_python](https://github.com/bazelbuild/rules_python).
+由于 Python 不发布官方的可分发 CPython 二进制文件，uv 转而使用来自 Astral [`python-build-standalone`](https://github.com/astral-sh/python-build-standalone) 项目的预构建发行版。`python-build-standalone` 也被许多其他 Python 项目使用，例如 [Mise](https://mise.jdx.dev/lang/python.html) 和 [bazelbuild/rules_python](https://github.com/bazelbuild/rules_python)。
 
-The uv Python distributions are self-contained, highly-portable, and performant. While Python can be
-built from source, as in tools like `pyenv`, doing so requires preinstalled system dependencies, and
-creating optimized, performant builds (e.g., with PGO and LTO enabled) is very slow.
+uv 的 Python 发行版是自包含的、高度可移植且高性能的。虽然可以像 `pyenv` 等工具一样从源代码构建 Python，但这样做需要预先安装系统依赖项，并且创建优化的、高性能的构建（例如，启用 PGO 和 LTO）非常缓慢。
 
-These distributions have some behavior quirks, generally as a consequence of portability; see the
-[`python-build-standalone` quirks](https://gregoryszorc.com/docs/python-build-standalone/main/quirks.html)
-documentation for details.
+这些发行版存在一些行为上的怪癖，通常是出于可移植性的考虑；有关详细信息，请参阅 [`python-build-standalone` 怪癖](https://gregoryszorc.com/docs/python-build-standalone/main/quirks.html) 文档。
 
-### PyPy distributions
+### PyPy 发行版
 
-PyPy distributions are provided by the [PyPy project](https://pypy.org).
+PyPy 发行版由 [PyPy 项目](https://pypy.org) 提供。
 
-### Pyodide distributions
+### Pyodide 发行版
 
-Pyodide distributions are provided by the [Pyodide project](https://github.com/pyodide/pyodide).
+Pyodide 发行版由 [Pyodide 项目](https://github.com/pyodide/pyodide) 提供。
 
-Pyodide is a port of CPython for the WebAssembly / Emscripten platform.
+Pyodide 是 CPython 针对 WebAssembly / Emscripten 平台的移植版本。
 
-## Transparent x86_64 emulation on aarch64
+## 在 aarch64 上透明的 x86_64 仿真
 
-Both macOS and Windows support running x86_64 binaries on aarch64 through transparent emulation.
-This is called [Rosetta 2](https://support.apple.com/en-gb/102527) or
-[Windows on ARM (WoA) emulation](https://learn.microsoft.com/en-us/windows/arm/apps-on-arm-x86-emulation).
-It's possible to use x86_64 uv on aarch64, and also possible to use an x86_64 Python interpreter on
-aarch64. Either uv binary can use either Python interpreter, but a Python interpreter needs packages
-for its architecture, either all x86_64 or all aarch64.
+macOS 和 Windows 都支持通过透明仿真在 aarch64 上运行 x86_64 二进制文件。这被称为 [Rosetta 2](https://support.apple.com/en-gb/102527) 或 [Windows on ARM (WoA) emulation](https://learn.microsoft.com/en-us/windows/arm/apps-on-arm-x86-emulation)。可以在 aarch64 上使用 x86_64 的 uv，也可以在 aarch64 上使用 x86_64 的 Python 解释器。任一 uv 二进制文件都可以使用任一 Python 解释器，但 Python 解释器需要与其架构（全是 x86_64 或全是 aarch64）对应的包。
 
-## Registration in the Windows registry
+## 在 Windows 注册表中的注册
 
-On Windows, installation of managed Python versions will register them with the Windows registry as
-defined by [PEP 514](https://peps.python.org/pep-0514/).
+在 Windows 上，安装托管的 Python 版本会将它们在 Windows 注册表中注册，遵循 [PEP 514](https://peps.python.org/pep-0514/) 的定义。
 
-After installation, the Python versions can be selected with the `py` launcher, e.g.:
+安装后，可以使用 `py` 启动器选择 Python 版本，例如：
 
 ```console
 $ uv python install 3.13.1
 $ py -V:Astral/CPython3.13.1
 ```
 
-On uninstall, uv will remove the registry entry for the target version as well as any broken
-registry entries.
+在卸载时，uv 将移除目标版本的注册表项以及任何损坏的注册表项。

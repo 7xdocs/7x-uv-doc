@@ -1,69 +1,51 @@
-# Reproducible examples
+# 可复现示例
 
-## Why reproducible examples are important
+## 为什么可复现示例很重要
 
-A minimal reproducible example (MRE) is essential for fixing bugs. Without an example that can be
-used to reproduce the problem, a maintainer cannot debug it or test if it is fixed. If the example
-is not minimal, i.e., if it includes lots of content which is not related to the issue, it can take
-a maintainer much longer to identify the root cause of the problem.
+最小可复现示例（MRE）对于修复错误至关重要。如果没有一个可以用来复现问题的示例，维护者就无法调试或测试问题是否已修复。如果示例不是最小化的，即包含了许多与问题无关的内容，维护者可能需要花费更多时间来确定问题的根本原因。
 
-## How to write a reproducible example
+## 如何编写可复现示例
 
-When writing a reproducible example, the goal is to provide all the context necessary for someone
-else to reproduce your example. This includes:
+编写可复现示例时，目标是提供所有必要的上下文，以便其他人能够复现你的示例。这包括：
 
-- The platform you're using (e.g., the operating system and architecture)
-- Any relevant system state (e.g., explicitly set environment variables)
-- The version of uv
-- The version of other relevant tools
-- The relevant files (the `uv.lock`, `pyproject.toml`, etc.)
-- The commands to run
+- 你使用的平台（例如操作系统和架构）
+- 任何相关的系统状态（例如明确设置的环境变量）
+- uv 的版本
+- 其他相关工具的版本
+- 相关文件（`uv.lock`、`pyproject.toml` 等）
+- 要运行的命令
 
-To ensure your reproduction is minimal, remove as many dependencies, settings, and files as
-possible. Be sure to test your reproduction before sharing it. We recommend including verbose logs
-from your reproduction; they may differ on your machine in a critical way. Using a
-[Gist](https://gist.github.com) can be helpful for very long logs.
+为确保你的复现是最小化的，请尽可能移除不必要的依赖、设置和文件。在分享之前，请务必测试你的复现步骤。我们建议包含复现过程中的详细日志；这些日志在你的机器上可能在某些关键方面有所不同。对于非常长的日志，使用 [Gist](https://gist.github.com) 可能会很有帮助。
 
-Below, we'll cover several specific [strategies](#strategies-for-reproducible-examples) for creating
-and sharing reproducible examples.
+下面，我们将介绍几种创建和分享可复现示例的特定[策略](#strategies-for-reproducible-examples)。
 
 !!! tip
 
-    There's a great guide to the basics of creating MREs on
-    [Stack Overflow](https://stackoverflow.com/help/minimal-reproducible-example).
+    Stack Overflow 上有一篇关于创建 MRE 基础知识的很棒指南：[Stack Overflow](https://stackoverflow.com/help/minimal-reproducible-example)。
 
-## Strategies for reproducible examples
+## 可复现示例的策略
 
-### Docker image
+### Docker 镜像
 
-Writing a Docker image is often the best way to share a reproducible example because it is entirely
-self-contained. This means that the state from the reproducer's system does not affect the problem.
+编写 Docker 镜像通常是分享可复现示例的最佳方式，因为它完全自包含。这意味着复现者的系统状态不会影响问题的复现。
 
 !!! note
 
-    Using a Docker image is only feasible if the issue is reproducible on Linux. When using macOS,
-    it's prudent to ensure your image is not reproducible on Linux but some bugs _are_ specific
-    to the operating system. While using Docker to run Windows containers is feasible, it's not
-    commonplace. These sorts of bugs are expected to be reported as a [script](#script) instead.
+    仅当问题在 Linux 上可复现时，使用 Docker 镜像才可行。在使用 macOS 时，明智的做法是确保你的镜像在 Linux 上不可复现，但有些错误确实特定于操作系统。虽然使用 Docker 运行 Windows 容器是可行的，但这并不常见。这类错误预计应通过[脚本](#script)的方式报告。
 
-When writing a Docker MRE with uv, it's best to start with one of
-[uv's Docker images](../../guides/integration/docker.md#available-images). When doing so, be sure to
-pin to a specific version of uv.
+在使用 uv 编写 Docker MRE 时，最好从 [uv 的 Docker 镜像](../../guides/integration/docker.md#available-images) 之一开始。这样做时，请确保固定使用特定版本的 uv。
 
 ```Dockerfile
 FROM ghcr.io/astral-sh/uv:0.5.24-debian-slim
 ```
 
-While Docker images are isolated from the system, the build will use your system's architecture by
-default. When sharing a reproduction, you can explicitly set the platform to ensure a reproducer
-gets the expected behavior. uv publishes images for `linux/amd64` (e.g., Intel or AMD) and
-`linux/arm64` (e.g., Apple M Series or ARM)
+虽然 Docker 镜像与系统隔离，但构建默认会使用你系统的架构。在分享复现步骤时，你可以显式设置平台以确保复现者获得预期的行为。uv 发布了适用于 `linux/amd64`（例如 Intel 或 AMD）和 `linux/arm64`（例如 Apple M 系列或 ARM）的镜像。
 
 ```Dockerfile
 FROM --platform=linux/amd64 ghcr.io/astral-sh/uv:0.5.24-debian-slim
 ```
 
-Docker images are best for reproducing issues that can be constructed with commands, e.g.:
+Docker 镜像最适合复现那些可以通过命令构建的问题，例如：
 
 ```Dockerfile
 FROM --platform=linux/amd64 ghcr.io/astral-sh/uv:0.5.24-debian-slim
@@ -75,7 +57,7 @@ RUN uv sync
 RUN uv run -v python -c "import pydantic"
 ```
 
-However, you can also write files into the image inline:
+但是，你也可以内联地将文件写入镜像：
 
 ```Dockerfile
 FROM --platform=linux/amd64 ghcr.io/astral-sh/uv:0.5.24-debian-slim
@@ -94,22 +76,17 @@ WORKDIR /mre
 RUN uv lock
 ```
 
-If you need to write many files, it's better to create and publish a
-[Git repository](#git-repository). You can combine these approaches and include a `Dockerfile` in
-the repository.
+如果你需要写入多个文件，最好创建并发布一个 [Git 仓库](#git-repository)。你可以结合这些方法，在仓库中包含一个 `Dockerfile`。
 
-When sharing a Docker reproduction, it's helpful to include the build logs. You can see more output
-from the build steps by disabling caching and the fancy output:
+在分享 Docker 复现步骤时，包含构建日志会很有帮助。你可以通过禁用缓存和美化输出来查看构建步骤的更多输出：
 
 ```console
 docker build . --progress plain --no-cache
 ```
 
-### Script
+### 脚本
 
-When reporting platform-specific bugs that cannot be reproduced in a [container](#docker-image),
-it's best practice to include a script showing the commands that can be used to reproduce the bug,
-e.g.:
+当报告无法在[容器](#docker-image)中复现的平台特定错误时，最佳实践是包含一个显示可用于复现错误的命令的脚本，例如：
 
 ```bash
 uv init
@@ -118,20 +95,15 @@ uv sync
 uv run -v python -c "import pydantic"
 ```
 
-If your reproduction requires many files, use a [Git repository](#git-repository) to share them.
+如果你的复现需要多个文件，请使用 [Git 仓库](#git-repository) 来分享它们。
 
-In addition to the script, include _verbose_ logs (i.e., with the `-v` flag) of the failure and the
-complete error message.
+除了脚本之外，还应包含失败的*详细*日志（即使用 `-v` 标志）和完整的错误消息。
 
-Whenever a script relies on external state, be sure to share that information. For example, if you
-wrote the script on Windows, and it uses a Python version that you installed with `choco` and runs
-on PowerShell 6.2, please include that in the report.
+每当脚本依赖外部状态时，请务必分享这些信息。例如，如果你在 Windows 上编写了脚本，并且它使用了你通过 `choco` 安装的 Python 版本，并在 PowerShell 6.2 上运行，请在报告中包含这些信息。
 
-### Git repository
+### Git 仓库
 
-When sharing a Git repository reproduction, include a [script](#script) that reproduces the problem
-or, even better, a [Dockerfile](#docker-image). The first step of the script should be to clone the
-repository and checkout a specific commit:
+当分享 Git 仓库复现步骤时，请包含一个能复现问题的[脚本](#script)，或者更好的是，包含一个 [Dockerfile](#docker-image)。脚本的第一步应该是克隆仓库并检出特定的提交：
 
 ```console
 $ git clone https://github.com/<user>/<project>.git
@@ -140,12 +112,10 @@ $ git checkout <commit>
 $ <commands to produce error>
 ```
 
-You can quickly create a new repository in the [GitHub UI](https://github.com/new) or with the `gh`
-CLI:
+你可以通过 [GitHub UI](https://github.com/new) 或 `gh` CLI 快速创建一个新仓库：
 
 ```console
 $ gh repo create uv-mre-1234 --clone
 ```
 
-When using a Git repository for a reproduction, please remember to _minimize_ the contents by
-excluding files or settings that are not required to reproduce your problem.
+当使用 Git 仓库进行复现时，请记住通过排除不需要复现问题的文件或设置来*最小化*内容。

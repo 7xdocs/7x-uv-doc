@@ -1,70 +1,52 @@
-# Git credentials
+# Git 凭证
 
-uv allows packages to be installed from private Git repositories using SSH or HTTP authentication.
+uv 允许使用 SSH 或 HTTP 认证从私有 Git 仓库安装包。
 
-## SSH authentication
+## SSH 认证
 
-To authenticate using an SSH key, use the `ssh://` protocol:
+要使用 SSH 密钥进行认证，请使用 `ssh://` 协议：
 
-- `git+ssh://git@<hostname>/...` (e.g., `git+ssh://git@github.com/astral-sh/uv`)
-- `git+ssh://git@<host>/...` (e.g., `git+ssh://git@github.com-key-2/astral-sh/uv`)
+- `git+ssh://git@<hostname>/...` (例如，`git+ssh://git@github.com/astral-sh/uv`)
+- `git+ssh://git@<host>/...` (例如，`git+ssh://git@github.com-key-2/astral-sh/uv`)
 
-SSH authentication requires using the username `git`.
+SSH 认证需要使用用户名 `git`。
 
-See the
-[GitHub SSH documentation](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/about-ssh)
-for more details on how to configure SSH.
+有关如何配置 SSH 的更多详细信息，请参阅 [GitHub SSH 文档](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/about-ssh)。
 
-### HTTP authentication
+### HTTP 认证
 
-To authenticate over HTTP Basic authentication using a password or token:
+要通过 HTTP 基本认证使用密码或令牌进行认证：
 
-- `git+https://<user>:<token>@<hostname>/...` (e.g.,
-  `git+https://git:github_pat_asdf@github.com/astral-sh/uv`)
-- `git+https://<token>@<hostname>/...` (e.g., `git+https://github_pat_asdf@github.com/astral-sh/uv`)
-- `git+https://<user>@<hostname>/...` (e.g., `git+https://git@github.com/astral-sh/uv`)
+- `git+https://<user>:<token>@<hostname>/...` (例如， `git+https://git:github_pat_asdf@github.com/astral-sh/uv`)
+- `git+https://<token>@<hostname>/...` (例如， `git+https://github_pat_asdf@github.com/astral-sh/uv`)
+- `git+https://<user>@<hostname>/...` (例如， `git+https://git@github.com/astral-sh/uv`)
 
 !!! note
 
-    When using a GitHub personal access token, the username is arbitrary. GitHub doesn't allow you to
-    use your account name and password in URLs like this, although other hosts may.
+    使用 GitHub 个人访问令牌时，用户名是任意的。GitHub 不允许在 URL 中使用您的账户名和密码，但其他托管服务商可能允许。
 
-If there are no credentials present in the URL and authentication is needed, the
-[Git credential helper](#git-credential-helpers) will be queried.
+如果 URL 中没有凭证但需要进行身份验证，则会查询 [Git 凭证助手](#git-凭证助手)。
 
-## Persistence of credentials
+## 凭证的持久化
 
-When using `uv add`, uv _will not_ persist Git credentials to the `pyproject.toml` or `uv.lock`.
-These files are often included in source control and distributions, so it is generally unsafe to
-include credentials in them.
+使用 `uv add` 时，uv _不会_ 将 Git 凭证持久化到 `pyproject.toml` 或 `uv.lock` 文件中。这些文件通常包含在版本控制和分发中，因此在其中包含凭证通常是不安全的。
 
-If you have a Git credential helper configured, your credentials may be automatically persisted,
-resulting in successful subsequent fetches of the dependency. However, if you do not have a Git
-credential helper or the project is used on a machine without credentials seeded, uv will fail to
-fetch the dependency.
+如果您配置了 Git 凭证助手，您的凭证可能会被自动持久化，从而使得后续获取依赖项能够成功。但是，如果您没有 Git 凭证助手，或者项目在没有预置凭证的机器上使用，uv 将无法获取依赖项。
 
-You _may_ force uv to persist Git credentials by passing the `--raw` option to `uv add`. However, we
-strongly recommend setting up a [credential helper](#git-credential-helpers) instead.
+您*可以*通过向 `uv add` 传递 `--raw` 选项来强制 uv 持久化 Git 凭证。但是，我们强烈建议改为设置 [凭证助手](#git-凭证助手)。
 
-## Git credential helpers
+## Git 凭证助手
 
-Git credential helpers are used to store and retrieve Git credentials. See the
-[Git documentation](https://git-scm.com/doc/credential-helpers) to learn more.
+Git 凭证助手用于存储和检索 Git 凭证。请参阅 [Git 文档](https://git-scm.com/doc/credential-helpers) 以了解更多。
 
-If you're using GitHub, the simplest way to set up a credential helper is to
-[install the `gh` CLI](https://github.com/cli/cli#installation) and use:
+如果您使用 GitHub，设置凭证助手的最简单方法是 [安装 `gh` CLI](https://github.com/cli/cli#installation) 并使用：
 
 ```console
 $ gh auth login
 ```
 
-See the [`gh auth login`](https://cli.github.com/manual/gh_auth_login) documentation for more
-details.
+更多详细信息，请参阅 [`gh auth login`](https://cli.github.com/manual/gh_auth_login) 文档。
 
 !!! note
 
-    When using `gh auth login` interactively, the credential helper will be configured automatically.
-    But when using `gh auth login --with-token`, as in the uv
-    [GitHub Actions guide](../../guides/integration/github.md#private-repos), the
-    [`gh auth setup-git`](https://cli.github.com/manual/gh_auth_setup-git) command will need to be
-    run afterwards to configure the credential helper.
+    在交互式使用 `gh auth login` 时，凭证助手会自动配置。但是当使用 `gh auth login --with-token` 时（如在 uv 的 [GitHub Actions 指南](../../guides/integration/github.md#private-repos) 中），之后需要运行 [`gh auth setup-git`](https://cli.github.com/manual/gh_auth_setup-git) 命令来配置凭证助手。

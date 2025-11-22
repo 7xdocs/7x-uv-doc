@@ -1,15 +1,15 @@
-# HTTP credentials
+# HTTP 凭据
 
-uv supports credentials over HTTP when querying package registries.
+uv 支持在查询包注册表时通过 HTTP 进行身份验证。
 
-Authentication can come from the following sources, in order of precedence:
+身份验证可以来自以下来源，按优先级从高到低排列：
 
-- The URL, e.g., `https://<user>:<password>@<hostname>/...`
-- A [netrc](#netrc-files) configuration file
-- The uv credentials store
-- A [keyring provider](#keyring-providers) (off by default)
+- URL，例如：`https://<user>:<password>@<hostname>/...`
+- [netrc](#netrc-文件) 配置文件
+- uv 凭据存储
+- [密钥环提供程序](#密钥环提供程序)（默认关闭）
 
-Authentication may be used for hosts specified in the following contexts:
+在以下上下文中指定的主机可以使用身份验证：
 
 - `[index]`
 - `index-url`
@@ -17,69 +17,46 @@ Authentication may be used for hosts specified in the following contexts:
 - `find-links`
 - `package @ https://...`
 
-## netrc files
+## netrc 文件
 
-[`.netrc`](https://everything.curl.dev/usingcurl/netrc) files are a long-standing plain text format
-for storing credentials on a system.
+[`.netrc`](https://everything.curl.dev/usingcurl/netrc) 文件是一种长期存在的纯文本格式，用于在系统上存储凭据。
 
-Reading credentials from `.netrc` files is always enabled. The target file path will be loaded from
-the `NETRC` environment variable if defined, falling back to `~/.netrc` if not.
+从 `.netrc` 文件读取凭据的功能始终启用。如果定义了 `NETRC` 环境变量，将从其指定的文件路径加载，否则回退到 `~/.netrc`。
 
-## The uv credentials store
+## uv 凭据存储
 
-uv can read and write credentials from a store using the [`uv auth` commands](./cli.md).
+uv 可以使用 [`uv auth` 命令](./cli.md) 从存储中读取和写入凭据。
 
-Credentials are stored in a plaintext file in uv's state directory, e.g.,
-`~/.local/share/uv/credentials/credentials.toml` on Unix. This file is currently not intended to be
-edited manually.
+凭据存储在 uv 状态目录下的一个纯文本文件中，例如，在 Unix 系统上为 `~/.local/share/uv/credentials/credentials.toml`。此文件目前不建议手动编辑。
 
 !!! note
 
-    A secure, system native storage mechanism is in [preview](../preview.md) — it is still
-    experimental and being actively developed. In the future, this will become the default storage
-    mechanism.
+    一个安全的、系统原生的存储机制正处于 [预览](../preview.md) 阶段 — 它仍然是实验性的，正在积极开发中。未来，这将成为默认的存储机制。
 
-    When enabled, uv will use the secret storage mechanism native to your operating system. On
-    macOS, it uses the Keychain Services. On Windows, it uses the Windows Credential Manager. On
-    Linux, it uses the DBus-based Secret Service API.
+    启用后，uv 将使用您操作系统原生的秘密存储机制。在 macOS 上，它使用钥匙串服务。在 Windows 上，它使用 Windows 凭据管理器。在 Linux 上，它使用基于 DBus 的 Secret Service API。
 
-    Currently, uv only searches the native store for credentials it has added to the secret store —
-    it will not retrieve credentials persisted by other applications.
+    目前，uv 仅在其已添加到秘密存储中的凭据中搜索原生存储 — 它不会检索由其他应用程序保存的凭据。
 
-    Set `UV_PREVIEW_FEATURES=native-auth` to use this storage mechanism.
+    设置 `UV_PREVIEW_FEATURES=native-auth` 以使用此存储机制。
 
-## Keyring providers
+## 密钥环提供程序
 
-A keyring provider is a concept from `pip` allowing retrieval of credentials from an interface
-matching the popular [keyring](https://github.com/jaraco/keyring) Python package.
+密钥环提供程序是一个来自 `pip` 的概念，允许从符合流行的 [keyring](https://github.com/jaraco/keyring) Python 包接口的接口检索凭据。
 
-The "subprocess" keyring provider invokes the `keyring` command to fetch credentials. uv does not
-support additional keyring provider types at this time.
+"subprocess" 密钥环提供程序通过调用 `keyring` 命令来获取凭据。uv 目前不支持其他类型的密钥环提供程序。
 
-Set `--keyring-provider subprocess`, `UV_KEYRING_PROVIDER=subprocess`, or
-`tool.uv.keyring-provider = "subprocess"` to use the provider.
+设置 `--keyring-provider subprocess`、`UV_KEYRING_PROVIDER=subprocess` 或 `tool.uv.keyring-provider = "subprocess"` 来使用该提供程序。
 
-## Persistence of credentials
+## 凭据的持久性
 
-If authentication is found for a single index URL or net location (scheme, host, and port), it will
-be cached for the duration of the command and used for other queries to that index or net location.
-Authentication is not cached across invocations of uv.
+如果为单个索引 URL 或网络位置（方案、主机和端口）找到身份验证信息，它将在该命令的持续时间内被缓存，并用于对该索引或网络位置的其他查询。身份验证信息不会在 uv 的不同调用之间缓存。
 
-When using `uv add`, uv _will not_ persist index credentials to the `pyproject.toml` or `uv.lock`.
-These files are often included in source control and distributions, so it is generally unsafe to
-include credentials in them. However, uv _will_ persist credentials for direct URLs, i.e.,
-`package @ https://username:password:example.com/foo.whl`, as there is not currently a way to
-otherwise provide those credentials.
+当使用 `uv add` 时，uv _不会_ 将索引凭据持久化到 `pyproject.toml` 或 `uv.lock` 中。这些文件通常包含在版本控制和分发中，因此将凭据包含在其中通常是不安全的。然而，uv _会_ 持久化直接 URL 的凭据，例如 `package @ https://username:password:example.com/foo.whl`，因为目前没有其他方法可以提供这些凭据。
 
-If credentials were attached to an index URL during `uv add`, uv may fail to fetch dependencies from
-indexes which require authentication on subsequent operations. See the
-[index authentication documentation](../indexes.md#authentication) for details on persistent
-authentication for indexes.
+如果在 `uv add` 期间将凭据附加到索引 URL，uv 在后续操作中可能无法从需要身份验证的索引获取依赖项。有关索引的持久身份验证的详细信息，请参阅 [索引身份验证文档](../indexes.md#authentication)。
 
-## Learn more
+## 了解更多
 
-See the [index authentication documentation](../indexes.md#authentication) for details on
-authenticating index URLs.
+有关验证索引 URL 的详细信息，请参阅 [索引身份验证文档](../indexes.md#authentication)。
 
-See the [`pip` compatibility guide](../../pip/compatibility.md#registry-authentication) for details
-on differences from `pip`.
+有关与 `pip` 差异的详细信息，请参阅 [`pip` 兼容性指南](../../pip/compatibility.md#registry-authentication)。

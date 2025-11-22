@@ -47,3 +47,16 @@ To update the documentation dependencies, edit `docs/requirements.in` and
 uv pip compile docs/requirements.in -o docs/requirements.txt --universal -p 3.12
 uv pip compile docs/requirements-insiders.in -o docs/requirements-insiders.txt --universal -p 3.12
 ```
+
+
+## 构建
+
+serve
+```
+uvx --with-requirements docs/requirements.txt -- mkdocs serve  -f mkdocs.public.yml 
+```
+
+build
+```
+uvx --with-requirements docs/requirements.txt -- mkdocs build  -f mkdocs.public.yml 
+```

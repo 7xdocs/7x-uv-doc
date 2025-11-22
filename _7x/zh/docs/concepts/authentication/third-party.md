@@ -1,21 +1,17 @@
-# Third-party services
+# 第三方服务
 
-## Authentication with alternative package indexes
+## 使用替代包索引进行认证
 
-See the [alternative indexes integration guide](../../guides/integration/alternative-indexes.md) for
-details on authentication with popular alternative Python package indexes.
+有关与流行的替代 Python 包索引进行认证的详细信息，请参阅[替代索引集成指南](../../guides/integration/alternative-indexes.md)。
 
-## Hugging Face support
+## Hugging Face 支持
 
-uv supports automatic authentication for the Hugging Face Hub. Specifically, if the `HF_TOKEN`
-environment variable is set, uv will propagate it to requests to `huggingface.co`.
+uv 支持对 Hugging Face Hub 进行自动认证。具体来说，如果设置了 `HF_TOKEN` 环境变量，uv 会将其传播到向 `huggingface.co` 发起的请求中。
 
-This is particularly useful for accessing private scripts in Hugging Face Datasets. For example, you
-can run the following command to execute the script `main.py` script from a private dataset:
+这对于访问 Hugging Face Datasets 中的私有脚本特别有用。例如，您可以运行以下命令来执行来自私有数据集的脚本 `main.py`：
 
 ```console
 $ HF_TOKEN=hf_... uv run https://huggingface.co/datasets/<user>/<name>/resolve/<branch>/main.py
 ```
 
-You can disable automatic Hugging Face authentication by setting the `UV_NO_HF_TOKEN=1` environment
-variable.
+您可以通过设置 `UV_NO_HF_TOKEN=1` 环境变量来禁用自动 Hugging Face 认证。

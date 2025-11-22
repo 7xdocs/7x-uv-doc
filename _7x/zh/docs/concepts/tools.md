@@ -1,88 +1,69 @@
 # Tools
 
-Tools are Python packages that provide command-line interfaces.
+Tools 是提供命令行接口的 Python 包。
 
 !!! note
 
-    See the [tools guide](../guides/tools.md) for an introduction to working with the tools
-    interface — this document discusses details of tool management.
+    关于如何使用 tools 接口的介绍，请参阅 [tools 指南](../guides/tools.md) —— 本文档讨论工具管理的细节。
 
-## The `uv tool` interface
+## `uv tool` 接口
 
-uv includes a dedicated interface for interacting with tools. Tools can be invoked without
-installation using `uv tool run`, in which case their dependencies are installed in a temporary
-virtual environment isolated from the current project.
+uv 包含一个专门的接口用于与工具交互。可以使用 `uv tool run` 在不安装工具的情况下调用它们，这种情况下，它们的依赖项会被安装在一个临时的虚拟环境中，该环境与当前项目隔离。
 
-Because it is very common to run tools without installing them, a `uvx` alias is provided for
-`uv tool run` — the two commands are exactly equivalent. For brevity, the documentation will mostly
-refer to `uvx` instead of `uv tool run`.
+因为在不安装的情况下运行工具非常常见，所以提供了一个 `uvx` 别名来代替 `uv tool run` —— 这两个命令完全等效。为简洁起见，文档将主要引用 `uvx` 而不是 `uv tool run`。
 
-Tools can also be installed with `uv tool install`, in which case their executables are
-[available on the `PATH`](#the-path) — an isolated virtual environment is still used, but it is not
-removed when the command completes.
+工具也可以使用 `uv tool install` 安装，这种情况下，它们的可执行文件将 [在 `PATH` 上可用](#the-path) —— 仍然使用隔离的虚拟环境，但该环境在命令完成后不会被移除。
 
-## Execution vs installation
+## 执行 vs 安装
 
-In most cases, executing a tool with `uvx` is more appropriate than installing the tool. Installing
-the tool is useful if you need the tool to be available to other programs on your system, e.g., if
-some script you do not control requires the tool, or if you are in a Docker image and want to make
-the tool available to users.
+在大多数情况下，使用 `uvx` 执行工具比安装工具更合适。安装工具在你需要该工具对系统上的其他程序可用时很有用，例如，如果你不控制的某个脚本需要该工具，或者如果你在 Docker 镜像中并希望让用户可以使用该工具。
 
-## Tool environments
+## 工具环境
 
-When running a tool with `uvx`, a virtual environment is stored in the uv cache directory and is
-treated as disposable, i.e., if you run `uv cache clean` the environment will be deleted. The
-environment is only cached to reduce the overhead of repeated invocations. If the environment is
-removed, a new one will be created automatically.
+当使用 `uvx` 运行工具时，一个虚拟环境被存储在 uv 缓存目录中，并被视作可丢弃的，即，如果你运行 `uv cache clean`，该环境将被删除。该环境仅被缓存以减少重复调用的开销。如果环境被移除，一个新的环境将自动创建。
 
-When installing a tool with `uv tool install`, a virtual environment is created in the
-[uv tools directory](../reference/storage.md#tools). The environment will not be removed unless the
-tool is uninstalled. If the environment is manually deleted, the tool will fail to run.
+当使用 `uv tool install` 安装工具时，一个虚拟环境被创建在 [uv 工具目录](../reference/storage.md#tools) 中。除非工具被卸载，否则该环境不会被移除。如果环境被手动删除，工具将无法运行。
 
 !!! important
 
-    Tool environments are _not_ intended to be mutated directly. It is strongly recommended never to
-    mutate a tool environment manually, e.g., with a `pip` operation.
+    工具环境 _不_ 旨在被直接修改。强烈建议永远不要手动修改工具环境，例如，通过 `pip` 操作。
 
-## Tool versions
+## 工具版本
 
-Unless a specific version is requested, `uv tool install` will install the latest available of the
-requested tool. `uvx` will use the latest available version of the requested tool _on the first
-invocation_. After that, `uvx` will use the cached version of the tool unless a different version is
-requested, the cache is pruned, or the cache is refreshed.
+除非请求特定版本，否则 `uv tool install` 将安装所请求工具的最新可用版本。`uvx` 将在 _第一次调用时_ 使用所请求工具的最新可用版本。之后，`uvx` 将使用工具的缓存版本，除非请求了不同的版本、缓存被清理或缓存被刷新。
 
-For example, to run a specific version of Ruff:
+例如，要运行特定版本的 Ruff：
 
 ```console
 $ uvx ruff@0.6.0 --version
 ruff 0.6.0
 ```
 
-A subsequent invocation of `uvx` will use the latest, not the cached, version.
+后续的 `uvx` 调用将使用最新的版本，而不是缓存的版本。
 
 ```console
 $ uvx ruff --version
 ruff 0.6.2
 ```
 
-But, if a new version of Ruff was released, it would not be used unless the cache was refreshed.
+但是，如果 Ruff 发布了新版本，除非缓存被刷新，否则不会使用新版本。
 
-To request the latest version of Ruff and refresh the cache, use the `@latest` suffix:
+要请求 Ruff 的最新版本并刷新缓存，使用 `@latest` 后缀：
 
 ```console
 $ uvx ruff@latest --version
 0.6.2
 ```
 
-Once a tool is installed with `uv tool install`, `uvx` will use the installed version by default.
+一旦工具使用 `uv tool install` 安装，`uvx` 将默认使用已安装的版本。
 
-For example, after installing an older version of Ruff:
+例如，安装旧版本的 Ruff 后：
 
 ```console
 $ uv tool install ruff==0.5.0
 ```
 
-The version of `ruff` and `uvx ruff` is the same:
+`ruff` 和 `uvx ruff` 的版本是相同的：
 
 ```console
 $ ruff --version
@@ -91,192 +72,165 @@ $ uvx ruff --version
 ruff 0.5.0
 ```
 
-However, you can ignore the installed version by requesting the latest version explicitly, e.g.:
+但是，你可以通过显式请求最新版本来忽略已安装的版本，例如：
 
 ```console
 $ uvx ruff@latest --version
 0.6.2
 ```
 
-Or, by using the `--isolated` flag, which will avoid refreshing the cache but ignore the installed
-version:
+或者，通过使用 `--isolated` 标志，这将避免刷新缓存但忽略已安装的版本：
 
 ```console
 $ uvx --isolated ruff --version
 0.6.2
 ```
 
-`uv tool install` will also respect the `{package}@{version}` and `{package}@latest` specifiers, as
-in:
+`uv tool install` 也会遵守 `{package}@{version}` 和 `{package}@latest` 说明符，如：
 
 ```console
 $ uv tool install ruff@latest
 $ uv tool install ruff@0.6.0
 ```
 
-## Upgrading tools
+## 升级工具
 
-Tool environments may be upgraded via `uv tool upgrade`, or re-created entirely via subsequent
-`uv tool install` operations.
+工具环境可以通过 `uv tool upgrade` 进行升级，或者通过后续的 `uv tool install` 操作完全重新创建。
 
-To upgrade all packages in a tool environment
+要升级工具环境中的所有包：
 
 ```console
 $ uv tool upgrade black
 ```
 
-To upgrade a single package in a tool environment:
+要升级工具环境中的单个包：
 
 ```console
 $ uv tool upgrade black --upgrade-package click
 ```
 
-Tool upgrades will respect the version constraints provided when installing the tool. For example,
-`uv tool install black >=23,<24` followed by `uv tool upgrade black` will upgrade Black to the
-latest version in the range `>=23,<24`.
+工具升级将遵守安装工具时提供的版本约束。例如，`uv tool install black >=23,<24` 后接 `uv tool upgrade black` 将在 `>=23,<24` 范围内将 Black 升级到最新版本。
 
-To instead replace the version constraints, reinstall the tool with `uv tool install`:
+要替换版本约束，请使用 `uv tool install` 重新安装工具：
 
 ```console
 $ uv tool install black>=24
 ```
 
-Similarly, tool upgrades will retain the settings provided when installing the tool. For example,
-`uv tool install black --prerelease allow` followed by `uv tool upgrade black` will retain the
-`--prerelease allow` setting.
+类似地，工具升级将保留安装工具时提供的设置。例如，`uv tool install black --prerelease allow` 后接 `uv tool upgrade black` 将保留 `--prerelease allow` 设置。
 
 !!! note
 
-    Tool upgrades will reinstall the tool executables, even if they have not changed.
+    工具升级将重新安装工具的可执行文件，即使它们没有改变。
 
-To reinstall packages during upgrade, use the `--reinstall` and `--reinstall-package` options.
+要在升级期间重新安装包，使用 `--reinstall` 和 `--reinstall-package` 选项。
 
-To reinstall all packages in a tool environment
+要重新安装工具环境中的所有包：
 
 ```console
 $ uv tool upgrade black --reinstall
 ```
 
-To reinstall a single package in a tool environment:
+要重新安装工具环境中的单个包：
 
 ```console
 $ uv tool upgrade black --reinstall-package click
 ```
 
-## Including additional dependencies
+## 包含额外的依赖项
 
-Additional packages can be included during tool execution:
+可以在工具执行期间包含额外的包：
 
 ```console
 $ uvx --with <extra-package> <tool>
 ```
 
-And, during tool installation:
+并且，在工具安装期间：
 
 ```console
 $ uv tool install --with <extra-package> <tool-package>
 ```
 
-The `--with` option can be provided multiple times to include additional packages.
+`--with` 选项可以多次提供以包含多个额外的包。
 
-The `--with` option supports package specifications, so a specific version can be requested:
+`--with` 选项支持包说明符，因此可以请求特定版本：
 
 ```console
 $ uvx --with <extra-package>==<version> <tool-package>
 ```
 
-The `-w` shorthand can be used in place of the `--with` option:
+可以使用 `-w` 简写代替 `--with` 选项：
 
 ```console
 $ uvx -w <extra-package> <tool-package>
 ```
 
-If the requested version conflicts with the requirements of the tool package, package resolution
-will fail and the command will error.
+如果请求的版本与工具包的要求冲突，包解析将失败，命令将报错。
 
-## Installing executables from additional packages
+## 从额外包安装可执行文件
 
-When installing a tool, you may want to include executables from additional packages in the same
-tool environment. This is useful when you have related tools that work together or when you want to
-install multiple executables that share dependencies.
+安装工具时，你可能希望将来自额外包的可执行文件包含在同一个工具环境中。这在你有关联工具需要协同工作，或者你想要安装多个共享依赖的可执行文件时很有用。
 
-The `--with-executables-from` option allows you to specify additional packages whose executables
-should be installed alongside the main tool:
+`--with-executables-from` 选项允许你指定额外的包，它们提供的可执行文件应与主工具一起安装：
 
 ```console
 $ uv tool install --with-executables-from <package1>,<package2> <tool-package>
 ```
 
-For example, to install Ansible along with executables from `ansible-core` and `ansible-lint`:
+例如，要安装 Ansible 以及来自 `ansible-core` 和 `ansible-lint` 的可执行文件：
 
 ```console
 $ uv tool install --with-executables-from ansible-core,ansible-lint ansible
 ```
 
-This will install all executables from the `ansible`, `ansible-core`, and `ansible-lint` packages
-into the same tool environment, making them all available on the `PATH`.
+这将把来自 `ansible`、`ansible-core` 和 `ansible-lint` 包的所有可执行文件安装到同一个工具环境中，使它们都在 `PATH` 上可用。
 
-The `--with-executables-from` option can be combined with other installation options:
+`--with-executables-from` 选项可以与其他安装选项结合使用：
 
 ```console
 $ uv tool install --with-executables-from ansible-core --with mkdocs-material ansible
 ```
 
-Note that `--with-executables-from` differs from `--with` in that:
+注意 `--with-executables-from` 与 `--with` 的不同之处在于：
 
-- `--with` includes additional packages as dependencies but does not install their executables
-- `--with-executables-from` includes both the packages as dependencies and installs their
-  executables
+- `--with` 将额外的包作为依赖项包含，但不安装它们的可执行文件
+- `--with-executables-from` 既将包作为依赖项包含，也安装它们的可执行文件
 
-## Python versions
+## Python 版本
 
-Each tool environment is linked to a specific Python version. This uses the same Python version
-[discovery logic](./python-versions.md#discovery-of-python-versions) as other virtual environments
-created by uv, but will ignore non-global Python version requests like `.python-version` files and
-the `requires-python` value from a `pyproject.toml`.
+每个工具环境都链接到一个特定的 Python 版本。这使用了与其他由 uv 创建的虚拟环境相同的 Python 版本 [发现逻辑](./python-versions.md#discovery-of-python-versions)，但会忽略非全局的 Python 版本请求，如 `.python-version` 文件和来自 `pyproject.toml` 的 `requires-python` 值。
 
-The `--python` option can be used to request a specific version. See the
-[Python version](./python-versions.md) documentation for more details.
+`--python` 选项可用于请求特定版本。更多详情请参阅 [Python 版本](./python-versions.md) 文档。
 
-If the Python version used by a tool is _uninstalled_, the tool environment will be broken and the
-tool may be unusable.
+如果工具使用的 Python 版本 _被卸载_，工具环境将被破坏，工具可能无法使用。
 
-## Tool executables
+## 工具可执行文件
 
-Tool executables include all console entry points, script entry points, and binary scripts provided
-by a Python package. Tool executables are symlinked into the
-[executable directory](../reference/storage.md#tool-executables) on Unix and copied on Windows.
+工具可执行文件包括 Python 包提供的所有控制台入口点、脚本入口点和二进制脚本。工具可执行文件在 Unix 上被符号链接到 [可执行文件目录](../reference/storage.md#tool-executables)，在 Windows 上被复制。
 
 !!! note
 
-    Executables provided by dependencies of tool packages are not installed.
+    工具包的依赖项提供的可执行文件不会被安装。
 
-The [executable directory](../reference/storage.md#executable-directory) must be in the `PATH`
-variable for tool executables to be available from the shell. If it is not in the `PATH`, a warning
-will be displayed. The `uv tool update-shell` command can be used to add the executable directory to
-the `PATH` in common shell configuration files.
+[可执行文件目录](../reference/storage.md#executable-directory) 必须位于 `PATH` 环境变量中，工具可执行文件才能从 shell 中可用。如果它不在 `PATH` 中，将显示警告。`uv tool update-shell` 命令可用于将可执行文件目录添加到常见 shell 配置文件的 `PATH` 中。
 
-### Overwriting executables
+### 覆盖可执行文件
 
-Installation of tools will not overwrite executables in the executable directory that were not
-previously installed by uv. For example, if `pipx` has been used to install a tool,
-`uv tool install` will fail. The `--force` flag can be used to override this behavior.
+安装工具不会覆盖可执行文件目录中先前不是由 uv 安装的可执行文件。例如，如果之前使用 `pipx` 安装了一个工具，`uv tool install` 将会失败。可以使用 `--force` 标志来覆盖此行为。
 
-## Relationship to `uv run`
+## 与 `uv run` 的关系
 
-The invocation `uv tool run <name>` (or `uvx <name>`) is nearly equivalent to:
+调用 `uv tool run <name>`（或 `uvx <name>`）几乎等效于：
 
 ```console
 $ uv run --no-project --with <name> -- <name>
 ```
 
-However, there are a couple notable differences when using uv's tool interface:
+但是，在使用 uv 的工具接口时，有几个显著的区别：
 
-- The `--with` option is not needed — the required package is inferred from the command name.
-- The temporary environment is cached in a dedicated location.
-- The `--no-project` flag is not needed — tools are always run isolated from the project.
-- If a tool is already installed, `uv tool run` will use the installed version but `uv run` will
-  not.
+- 不需要 `--with` 选项 —— 所需的包是从命令名称推断出来的。
+- 临时环境被缓存在一个专用位置。
+- 不需要 `--no-project` 标志 —— 工具总是与项目隔离运行。
+- 如果工具已经安装，`uv tool run` 将使用已安装的版本，但 `uv run` 不会。
 
-If the tool should not be isolated from the project, e.g., when running `pytest` or `mypy`, then
-`uv run` should be used instead of `uv tool run`.
+如果工具不应该与项目隔离，例如在运行 `pytest` 或 `mypy` 时，那么应该使用 `uv run` 而不是 `uv tool run`。

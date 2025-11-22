@@ -1,11 +1,11 @@
-# Authentication
+# 认证
 
-Authentication is required when working with private repositories or package indexes.
+在使用私有代码仓库或软件包索引时，需要进行认证。
 
-Learn more about authentication in uv:
+了解更多关于 uv 中的认证信息：
 
-- [Using the `uv auth` CLI](./cli.md)
-- [HTTP authentication](./http.md)
-- [Git authentication](./git.md)
-- [TLS certificates](./certificates.md)
-- [Third-party services](./third-party.md)
+- [使用 `uv auth` 命令行界面](./cli.md)
+- [HTTP 认证](./http.md)
+- [Git 认证](./git.md)
+- [TLS 证书](./certificates.md)
+- [第三方服务](./third-party.md)

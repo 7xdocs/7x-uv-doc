@@ -1,31 +1,24 @@
-# Creating projects
+# 创建项目
 
-uv supports creating a project with `uv init`.
+uv 支持使用 `uv init` 创建项目。
 
-When creating projects, uv supports two basic templates: [**applications**](#applications) and
-[**libraries**](#libraries). By default, uv will create a project for an application. The `--lib`
-flag can be used to create a project for a library instead.
+在创建项目时，uv 支持两种基本模板：[**应用**](#applications)和[**库**](#libraries)。默认情况下，uv 将创建一个应用项目。可以使用 `--lib` 标志来创建一个库项目。
 
-## Target directory
+## 目标目录
 
-uv will create a project in the working directory, or, in a target directory by providing a name,
-e.g., `uv init foo`. The working directory can be modified with the `--directory` option, which will
-cause the target directory path will be interpreted relative to the specified working directory. If
-there's already a project in the target directory, i.e., if there's a `pyproject.toml`, uv will exit
-with an error.
+uv 将在当前工作目录中创建项目，或者通过提供一个名称在目标目录中创建项目，例如 `uv init foo`。可以使用 `--directory` 选项修改工作目录，这将导致目标目录路径相对于指定的工作目录进行解释。如果目标目录中已存在项目（即存在 `pyproject.toml`），uv 将报错并退出。
 
-## Applications
+## 应用
 
-Application projects are suitable for web servers, scripts, and command-line interfaces.
+应用项目适用于 Web 服务器、脚本和命令行界面。
 
-Applications are the default target for `uv init`, but can also be specified with the `--app` flag.
+应用是 `uv init` 的默认目标，但也可以使用 `--app` 标志明确指定。
 
 ```console
 $ uv init example-app
 ```
 
-The project includes a `pyproject.toml`, a sample file (`main.py`), a readme, and a Python version
-pin file (`.python-version`).
+项目包括一个 `pyproject.toml`、一个示例文件 (`main.py`)、一个自述文件和一个 Python 版本锁定文件 (`.python-version`)。
 
 ```console
 $ tree example-app
@@ -36,12 +29,11 @@ example-app
 └── pyproject.toml
 ```
 
-!!! note
+!!! 注意
 
-    Prior to v0.6.0, uv created a file named `hello.py` instead of `main.py`.
+    在 v0.6.0 之前，uv 创建的文件名为 `hello.py` 而不是 `main.py`。
 
-The `pyproject.toml` includes basic metadata. It does not include a build system, it is not a
-[package](./config.md#project-packaging) and will not be installed into the environment:
+`pyproject.toml` 包含基本元数据。它不包含构建系统，不是一个[包](./config.md#project-packaging)，也不会被安装到环境中：
 
 ```toml title="pyproject.toml"
 [project]
@@ -53,7 +45,7 @@ requires-python = ">=3.11"
 dependencies = []
 ```
 
-The sample file defines a `main` function with some standard boilerplate:
+示例文件定义了一个包含标准样板代码的 `main` 函数：
 
 ```python title="main.py"
 def main():
@@ -64,7 +56,7 @@ if __name__ == "__main__":
     main()
 ```
 
-Python files can be executed with `uv run`:
+可以使用 `uv run` 执行 Python 文件：
 
 ```console
 $ cd example-app
@@ -72,19 +64,17 @@ $ uv run main.py
 Hello from example-project!
 ```
 
-## Packaged applications
+## 打包的应用
 
-Many use-cases require a [package](./config.md#project-packaging). For example, if you are creating
-a command-line interface that will be published to PyPI or if you want to define tests in a
-dedicated directory.
+许多用例需要一个[包](./config.md#project-packaging)。例如，如果你正在创建一个要发布到 PyPI 的命令行界面，或者你想在专用目录中定义测试。
 
-The `--package` flag can be used to create a packaged application:
+可以使用 `--package` 标志创建一个打包的应用：
 
 ```console
 $ uv init --package example-pkg
 ```
 
-The source code is moved into a `src` directory with a module directory and an `__init__.py` file:
+源代码被移动到一个带有模块目录和 `__init__.py` 文件的 `src` 目录中：
 
 ```console
 $ tree example-pkg
@@ -97,8 +87,7 @@ example-pkg
         └── __init__.py
 ```
 
-A [build system](./config.md#build-systems) is defined, so the project will be installed into the
-environment:
+定义了[构建系统](./config.md#build-systems)，因此项目将被安装到环境中：
 
 ```toml title="pyproject.toml" hl_lines="12-14"
 [project]
@@ -117,11 +106,11 @@ requires = ["uv_build>=0.9.10,<0.10.0"]
 build-backend = "uv_build"
 ```
 
-!!! tip
+!!! 提示
 
-    The `--build-backend` option can be used to request an alternative build system.
+    可以使用 `--build-backend` 选项请求使用替代的构建系统。
 
-A [command](./config.md#entry-points) definition is included:
+包含一个[命令](./config.md#entry-points)定义：
 
 ```toml title="pyproject.toml" hl_lines="9 10"
 [project]
@@ -140,7 +129,7 @@ requires = ["uv_build>=0.9.10,<0.10.0"]
 build-backend = "uv_build"
 ```
 
-The command can be executed with `uv run`:
+可以使用 `uv run` 执行该命令：
 
 ```console
 $ cd example-pkg
@@ -148,23 +137,21 @@ $ uv run example-pkg
 Hello from example-pkg!
 ```
 
-## Libraries
+## 库
 
-A library provides functions and objects for other projects to consume. Libraries are intended to be
-built and distributed, e.g., by uploading them to PyPI.
+库提供函数和对象供其他项目使用。库旨在被构建和分发，例如通过将它们上传到 PyPI。
 
-Libraries can be created by using the `--lib` flag:
+可以使用 `--lib` 标志创建库：
 
 ```console
 $ uv init --lib example-lib
 ```
 
-!!! note
+!!! 注意
 
-    Using `--lib` implies `--package`. Libraries always require a packaged project.
+    使用 `--lib` 意味着 `--package`。库始终需要一个打包的项目。
 
-As with a [packaged application](#packaged-applications), a `src` layout is used. A `py.typed`
-marker is included to indicate to consumers that types can be read from the library:
+与[打包的应用](#packaged-applications)一样，使用 `src` 布局。包含一个 `py.typed` 标记，以向使用者表明可以从库中读取类型：
 
 ```console
 $ tree example-lib
@@ -178,14 +165,11 @@ example-lib
         └── __init__.py
 ```
 
-!!! note
+!!! 注意
 
-    A `src` layout is particularly valuable when developing libraries. It ensures that the library is
-    isolated from any `python` invocations in the project root and that distributed library code is
-    well separated from the rest of the project source.
+    在开发库时，`src` 布局特别有价值。它确保库与项目根目录中的任何 `python` 调用隔离，并且确保分发的库代码与项目源代码的其余部分很好地分离。
 
-A [build system](./config.md#build-systems) is defined, so the project will be installed into the
-environment:
+定义了[构建系统](./config.md#build-systems)，因此项目将被安装到环境中：
 
 ```toml title="pyproject.toml" hl_lines="12-14"
 [project]
@@ -201,20 +185,18 @@ requires = ["uv_build>=0.9.10,<0.10.0"]
 build-backend = "uv_build"
 ```
 
-!!! tip
+!!! 提示
 
-    You can select a different build backend template by using `--build-backend` with `hatchling`,
-    `uv_build`, `flit-core`, `pdm-backend`, `setuptools`, `maturin`, or `scikit-build-core`. An
-    alternative backend is required if you want to create a [library with extension modules](#projects-with-extension-modules).
+    你可以使用 `--build-backend` 与 `hatchling`、`uv_build`、`flit-core`、`pdm-backend`、`setuptools`、`maturin` 或 `scikit-build-core` 来选择不同的构建后端模板。如果你想创建[带有扩展模块的库](#projects-with-extension-modules)，则需要一个替代的后端。
 
-The created module defines a simple API function:
+创建的模块定义了一个简单的 API 函数：
 
 ```python title="__init__.py"
 def hello() -> str:
     return "Hello from example-lib!"
 ```
 
-And you can import and execute it using `uv run`:
+你可以使用 `uv run` 导入并执行它：
 
 ```console
 $ cd example-lib
@@ -222,31 +204,26 @@ $ uv run python -c "import example_lib; print(example_lib.hello())"
 Hello from example-lib!
 ```
 
-## Projects with extension modules
+## 带有扩展模块的项目
 
-Most Python projects are "pure Python", meaning they do not define modules in other languages like
-C, C++, FORTRAN, or Rust. However, projects with extension modules are often used for performance
-sensitive code.
+大多数 Python 项目是"纯 Python"的，这意味着它们没有用其他语言（如 C、C++、FORTRAN 或 Rust）定义模块。然而，带有扩展模块的项目通常用于性能敏感的代码。
 
-Creating a project with an extension module requires choosing an alternative build system. uv
-supports creating projects with the following build systems that support building extension modules:
+创建带有扩展模块的项目需要选择替代的构建系统。uv 支持使用以下支持构建扩展模块的构建系统创建项目：
 
-- [`maturin`](https://www.maturin.rs) for projects with Rust
-- [`scikit-build-core`](https://github.com/scikit-build/scikit-build-core) for projects with C, C++,
-  FORTRAN, Cython
+- 对于带有 Rust 的项目，使用 [`maturin`](https://www.maturin.rs)
+- 对于带有 C、C++、FORTRAN、Cython 的项目，使用 [`scikit-build-core`](https://github.com/scikit-build/scikit-build-core)
 
-Specify the build system with the `--build-backend` flag:
+使用 `--build-backend` 标志指定构建系统：
 
 ```console
 $ uv init --build-backend maturin example-ext
 ```
 
-!!! note
+!!! 注意
 
-    Using `--build-backend` implies `--package`.
+    使用 `--build-backend` 意味着 `--package`。
 
-The project contains a `Cargo.toml` and a `lib.rs` file in addition to the typical Python project
-files:
+除了典型的 Python 项目文件外，该项目还包含一个 `Cargo.toml` 和一个 `lib.rs` 文件：
 
 ```console
 $ tree example-ext
@@ -262,11 +239,11 @@ example-ext
         └── _core.pyi
 ```
 
-!!! note
+!!! 注意
 
-    If using `scikit-build-core`, you'll see CMake configuration and a `main.cpp` file instead.
+    如果使用 `scikit-build-core`，你将看到 CMake 配置和一个 `main.cpp` 文件。
 
-The Rust library defines a simple function:
+Rust 库定义了一个简单的函数：
 
 ```rust title="src/lib.rs"
 use pyo3::prelude::*;
@@ -282,7 +259,7 @@ mod _core {
 }
 ```
 
-And the Python module imports it:
+Python 模块导入了它：
 
 ```python title="src/example_ext/__init__.py"
 from example_ext._core import hello_from_bin
@@ -292,7 +269,7 @@ def main() -> None:
     print(hello_from_bin())
 ```
 
-The command can be executed with `uv run`:
+可以使用 `uv run` 执行该命令：
 
 ```console
 $ cd example-ext
@@ -300,22 +277,19 @@ $ uv run example-ext
 Hello from example-ext!
 ```
 
-!!! important
+!!! 重要
 
-    When creating a project with maturin or scikit-build-core, uv configures [`tool.uv.cache-keys`](https://docs.astral.sh/uv/reference/settings/#cache-keys)
-    to include common source file types. To force a rebuild, e.g. when changing files outside
-    `cache-keys` or when not using `cache-keys`, use `--reinstall`.
+    当使用 maturin 或 scikit-build-core 创建项目时，uv 配置了 [`tool.uv.cache-keys`](https://docs.astral.sh/uv/reference/settings/#cache-keys) 以包含常见的源文件类型。要强制重新构建（例如，当更改 `cache-keys` 之外的文件或未使用 `cache-keys` 时），请使用 `--reinstall`。
 
-## Creating a minimal project
+## 创建最小化项目
 
-If you only want to create a `pyproject.toml`, use the `--bare` option:
+如果只想创建一个 `pyproject.toml`，请使用 `--bare` 选项：
 
 ```console
 $ uv init example --bare
 ```
 
-uv will skip creating a Python version pin file, a README, and any source directories or files.
-Additionally, uv will not initialize a version control system (i.e., `git`).
+uv 将跳过创建 Python 版本锁定文件、README 以及任何源目录或文件。此外，uv 不会初始化版本控制系统（即 `git`）。
 
 ```console
 $ tree example-bare
@@ -323,7 +297,7 @@ example-bare
 └── pyproject.toml
 ```
 
-uv will also not add extra metadata to the `pyproject.toml`, such as the `description` or `authors`.
+uv 也不会向 `pyproject.toml` 添加额外的元数据，例如 `description` 或 `authors`。
 
 ```toml
 [project]
@@ -333,10 +307,9 @@ requires-python = ">=3.12"
 dependencies = []
 ```
 
-The `--bare` option can be used with other options like `--lib` or `--build-backend` — in these
-cases uv will still configure a build system but will not create the expected file structure.
+`--bare` 选项可以与其他选项（如 `--lib` 或 `--build-backend`）一起使用 —— 在这些情况下，uv 仍然会配置构建系统，但不会创建预期的文件结构。
 
-When `--bare` is used, additional features can still be used opt-in:
+当使用 `--bare` 时，仍然可以选择加入其他功能：
 
 ```console
 $ uv init example --bare --description "Hello world" --author-from git --vcs git --python-pin

@@ -1,215 +1,133 @@
-# Compatibility with `pip` and `pip-tools`
 
-uv is designed as a drop-in replacement for common `pip` and `pip-tools` workflows.
+# 与 `pip` 和 `pip-tools` 的兼容性
 
-Informally, the intent is such that existing `pip` and `pip-tools` users can switch to uv without
-making meaningful changes to their packaging workflows; and, in most cases, swapping out
-`pip install` for `uv pip install` should "just work".
+uv 被设计为常见 `pip` 和 `pip-tools` 工作流的直接替代品。
 
-However, uv is _not_ intended to be an _exact_ clone of `pip`, and the further you stray from common
-`pip` workflows, the more likely you are to encounter differences in behavior. In some cases, those
-differences may be known and intentional; in others, they may be the result of implementation
-details; and in others, they may be bugs.
+非正式地说，其意图是让现有的 `pip` 和 `pip-tools` 用户可以在不改变其打包工作流核心内容的情况下切换到 uv；并且在大多数情况下，将 `pip install` 替换为 `uv pip install` 应该"直接工作"。
 
-This document outlines the known differences between uv and `pip`, along with rationale,
-workarounds, and a statement of intent for compatibility in the future.
+然而，uv _并不_ 旨在成为 `pip` 的 _精确_ 克隆，你越偏离常见的 `pip` 工作流，就越有可能遇到行为上的差异。在某些情况下，这些差异可能是已知且故意的；在其他情况下，它们可能是实现细节的结果；而在另一些情况下，它们可能是错误。
 
-## Configuration files and environment variables
+本文档概述了 uv 与 `pip` 之间的已知差异，包括原理、解决方法以及对未来兼容性的意图说明。
 
-uv does not read configuration files or environment variables that are specific to `pip`, like
-`pip.conf` or `PIP_INDEX_URL`.
+## 配置文件和环境变量
 
-Reading configuration files and environment variables intended for other tools has a number of
-drawbacks:
+uv 不读取特定于 `pip` 的配置文件或环境变量，例如 `pip.conf` 或 `PIP_INDEX_URL`。
 
-1. It requires bug-for-bug compatibility with the target tool, since users end up relying on bugs in
-   the format, the parser, etc.
-2. If the target tool _changes_ the format in some way, uv is then locked-in to changing it in
-   equivalent ways.
-3. If that configuration is versioned in some way, uv would need to know _which version_ of the
-   target tool the user is expecting to use.
-4. It prevents uv from introducing any settings or configuration that don't exist in the target
-   tool, since otherwise `pip.conf` (or similar) would no longer be usable with `pip`.
-5. It can lead to user confusion, since uv would be reading settings that don't actually affect its
-   behavior, and many users may _not_ expect uv to read configuration files intended for other
-   tools.
+读取针对其他工具的配置文件和环境变量存在许多缺点：
 
-Instead, uv supports its own environment variables, like `UV_INDEX_URL`. uv also supports persistent
-configuration in a `uv.toml` file or a `[tool.uv.pip]` section of `pyproject.toml`. For more
-information, see [Configuration files](../concepts/configuration-files.md).
+1. 它需要与目标工具进行错误对错误的兼容性，因为用户最终会依赖格式、解析器等中的错误。
+2. 如果目标工具以某种方式 _更改_ 了格式，那么 uv 就会被锁定必须以等效的方式更改。
+3. 如果该配置以某种方式进行了版本控制，uv 需要知道用户期望使用目标工具的 _哪个版本_。
+4. 它阻止 uv 引入目标工具中不存在的任何设置或配置，因为否则 `pip.conf`（或类似文件）将无法再与 `pip` 一起使用。
+5. 它可能导致用户混淆，因为 uv 会读取实际上不影响其行为的设置，并且许多用户可能 _不_ 期望 uv 读取针对其他工具的配置文件。
 
-## Pre-release compatibility
+相反，uv 支持其自己的环境变量，例如 `UV_INDEX_URL`。uv 还支持在 `uv.toml` 文件或 `pyproject.toml` 的 `[tool.uv.pip]` 部分中进行持久配置。有关更多信息，请参阅[配置文件](../concepts/configuration-files.md)。
 
-By default, uv will accept pre-release versions during dependency resolution in two cases:
+## 预发布版本兼容性
 
-1. If the package is a direct dependency, and its version markers include a pre-release specifier
-   (e.g., `flask>=2.0.0rc1`).
-1. If _all_ published versions of a package are pre-releases.
+默认情况下，uv 在两种情况下会在依赖解析期间接受预发布版本：
 
-If dependency resolution fails due to a transitive pre-release, uv will prompt the user to re-run
-with `--prerelease allow`, to allow pre-releases for all dependencies.
+1. 如果包是直接依赖项，并且其版本标记包含预发布说明符（例如，`flask>=2.0.0rc1`）。
+2. 如果包的 _所有_ 已发布版本都是预发布版本。
 
-Alternatively, you can add the transitive dependency to your `requirements.in` file with pre-release
-specifier (e.g., `flask>=2.0.0rc1`) to opt in to pre-release support for that specific dependency.
+如果由于传递性预发布导致依赖解析失败，uv 将提示用户使用 `--prerelease allow` 重新运行，以允许所有依赖项使用预发布版本。
 
-In sum, uv needs to know upfront whether the resolver should accept pre-releases for a given
-package. `pip`, meanwhile, _may_ respect pre-release identifiers in transitive dependencies
-depending on the order in which the resolver encounters the relevant specifiers
-([#1641](https://github.com/astral-sh/uv/issues/1641#issuecomment-1981402429)).
+或者，你可以将传递性依赖项添加到你的 `requirements.in` 文件中，并带有预发布说明符（例如，`flask>=2.0.0rc1`），以选择加入对该特定依赖项的预发布支持。
 
-Pre-releases are
-[notoriously difficult](https://pubgrub-rs-guide.netlify.app/limitations/prerelease_versions) to
-model, and are a frequent source of bugs in packaging tools. Even `pip`, which is viewed as a
-reference implementation, has a number of open questions around pre-release handling
-([#12469](https://github.com/pypa/pip/issues/12469),
+总之，uv 需要预先知道解析器是否应该接受给定包的预发布版本。而 `pip`，_可能_ 会尊重传递性依赖项中的预发布标识符，这取决于解析器遇到相关说明符的顺序（[#1641](https://github.com/astral-sh/uv/issues/1641#issuecomment-1981402429)）。
+
+预发布版本是
+[众所周知的难以](https://pubgrub-rs-guide.netlify.app/limitations/prerelease_versions) 建模的，
+并且是打包工具中常见的错误来源。即使被视为参考实现的 `pip`，在预发布处理方面也存在许多悬而未决的问题
+（[#12469](https://github.com/pypa/pip/issues/12469),
 [#12470](https://github.com/pypa/pip/issues/12470),
-[#40505](https://discuss.python.org/t/handling-of-pre-releases-when-backtracking/40505/20), etc.).
-uv's pre-release handling is _intentionally_ limited and _intentionally_ requires user opt-in for
-pre-releases, to ensure correctness.
+[#40505](https://discuss.python.org/t/handling-of-pre-releases-when-backtracking/40505/20), 等）。
+uv 的预发布处理是 _有意_ 受限的，并且 _有意_ 要求用户选择加入预发布版本，以确保正确性。
 
-In the future, uv _may_ support pre-release identifiers in transitive dependencies. However, it's
-likely contingent on evolution in the Python packaging specifications. The existing PEPs
-[do not cover "dependency resolution"](https://discuss.python.org/t/handling-of-pre-releases-when-backtracking/40505/17)
-and are instead focused on behavior for a _single_ version specifier. As such, there are unresolved
-questions around the correct and intended behavior for pre-releases in the packaging ecosystem more
-broadly.
+将来，uv _可能_ 会支持传递性依赖项中的预发布标识符。然而，这很可能取决于 Python 打包规范的发展。现有的 PEP
+[并未涵盖"依赖解析"](https://discuss.python.org/t/handling-of-pre-releases-when-backtracking/40505/17)，
+而是侧重于 _单个_ 版本说明符的行为。因此，更广泛的打包生态系统中关于预发布的正确和预期行为存在未解决的问题。
 
-## Packages that exist on multiple indexes
+## 存在于多个索引上的包
 
-In both uv and `pip`, users can specify multiple package indexes from which to search for the
-available versions of a given package. However, uv and `pip` differ in how they handle packages that
-exist on multiple indexes.
+在 uv 和 `pip` 中，用户都可以指定多个包索引，以从中搜索给定包的可用版本。然而，uv 和 `pip` 在处理存在于多个索引上的包时有所不同。
 
-For example, imagine that a company publishes an internal version of `requests` on a private index
-(`--extra-index-url`), but also allows installing packages from PyPI by default. In this case, the
-private `requests` would conflict with the public [`requests`](https://pypi.org/project/requests/)
-on PyPI.
+例如，假设一家公司在私有索引 (`--extra-index-url`) 上发布了内部版本的 `requests`，但也默认允许从 PyPI 安装包。在这种情况下，私有的 `requests` 会与 PyPI 上的公共 [`requests`](https://pypi.org/project/requests/) 冲突。
 
-When uv searches for a package across multiple indexes, it will iterate over the indexes in order
-(preferring the `--extra-index-url` over the default index), and stop searching as soon as it finds
-a match. This means that if a package exists on multiple indexes, uv will limit its candidate
-versions to those present in the first index that contains the package.
+当 uv 跨多个索引搜索包时，它会按顺序迭代索引（优先考虑 `--extra-index-url` 而不是默认索引），并在找到匹配项后立即停止搜索。这意味着如果一个包存在于多个索引上，uv 会将其候选版本限制在包含该包的第一个索引中存在的版本。
 
-`pip`, meanwhile, will combine the candidate versions from all indexes, and select the best version
-from the combined set, though it makes
-[no guarantees around the order](https://github.com/pypa/pip/issues/5045#issuecomment-369521345) in
-which it searches indexes, and expects that packages are unique up to name and version, even across
-indexes.
+而 `pip` 则会合并来自所有索引的候选版本，并从合并的集合中选择最佳版本，尽管它
+[不保证搜索索引的顺序](https://github.com/pypa/pip/issues/5045#issuecomment-369521345)，
+并且期望包在名称和版本上是唯一的，即使跨索引也是如此。
 
-uv's behavior is such that if a package exists on an internal index, it should always be installed
-from the internal index, and never from PyPI. The intent is to prevent "dependency confusion"
-attacks, in which an attacker publishes a malicious package on PyPI with the same name as an
-internal package, thus causing the malicious package to be installed instead of the internal
-package. See, for example,
-[the `torchtriton` attack](https://pytorch.org/blog/compromised-nightly-dependency/) from
-December 2022.
+uv 的行为是，如果一个包存在于内部索引上，它应该始终从内部索引安装，而不是从 PyPI 安装。其目的是防止"依赖混淆"
+攻击，在这种攻击中，攻击者在 PyPI 上发布了一个与内部包同名的恶意包，从而导致安装恶意包而不是内部包。例如，参见
+2022 年 12 月的 [`torchtriton` 攻击](https://pytorch.org/blog/compromised-nightly-dependency/)。
 
-As of v0.1.39, users can opt in to `pip`-style behavior for multiple indexes via the
-`--index-strategy` command-line option, or the `UV_INDEX_STRATEGY` environment variable, which
-supports the following values:
+从 v0.1.39 开始，用户可以通过 `--index-strategy` 命令行选项或 `UV_INDEX_STRATEGY` 环境变量选择加入 `pip` 风格的多索引行为，该选项支持以下值：
 
-- `first-index` (default): Search for each package across all indexes, limiting the candidate
-  versions to those present in the first index that contains the package, prioritizing the
-  `--extra-index-url` indexes over the default index URL.
-- `unsafe-first-match`: Search for each package across all indexes, but prefer the first index with
-  a compatible version, even if newer versions are available on other indexes.
-- `unsafe-best-match`: Search for each package across all indexes, and select the best version from
-  the combined set of candidate versions.
+- `first-index`（默认）：跨所有索引搜索每个包，将候选版本限制在包含该包的第一个索引中存在的版本，优先考虑 `--extra-index-url` 索引而不是默认索引 URL。
+- `unsafe-first-match`：跨所有索引搜索每个包，但优先选择具有兼容版本的第一个索引，即使其他索引上有更新的版本。
+- `unsafe-best-match`：跨所有索引搜索每个包，并从候选版本的合并集合中选择最佳版本。
 
-While `unsafe-best-match` is the closest to `pip`'s behavior, it exposes users to the risk of
-"dependency confusion" attacks.
+虽然 `unsafe-best-match` 最接近 `pip` 的行为，但它使用户面临"依赖混淆"攻击的风险。
 
-uv also supports pinning packages to dedicated indexes (see:
-[_Indexes_](../concepts/indexes.md#pinning-a-package-to-an-index)), such that a given package is
-_always_ installed from a specific index.
+uv 还支持将包固定到专用索引（参见：[_索引_](../concepts/indexes.md#pinning-a-package-to-an-index)），使得给定的包 _总是_ 从特定索引安装。
 
-## PEP 517 build isolation
+## PEP 517 构建隔离
 
-uv uses [PEP 517](https://peps.python.org/pep-0517/) build isolation by default (akin to
-`pip install --use-pep517`), following `pypa/build` and in anticipation of `pip` defaulting to PEP
-517 builds in the future ([pypa/pip#9175](https://github.com/pypa/pip/issues/9175)).
+uv 默认使用 [PEP 517](https://peps.python.org/pep-0517/) 构建隔离（类似于 `pip install --use-pep517`），遵循 `pypa/build` 并预期 `pip` 将来会默认使用 PEP 517 构建（[pypa/pip#9175](https://github.com/pypa/pip/issues/9175)）。
 
-If a package fails to install due to a missing build-time dependency, try using a newer version of
-the package; if the problem persists, consider filing an issue with the package maintainer,
-requesting that they update the packaging setup to declare the correct PEP 517 build-time
-dependencies.
+如果一个包由于缺少构建时依赖项而安装失败，请尝试使用更新版本的包；如果问题仍然存在，请考虑向包维护者提交问题，请求他们更新打包设置以声明正确的 PEP 517 构建时依赖项。
 
-As an escape hatch, you can preinstall a package's build dependencies, then run `uv pip install`
-with `--no-build-isolation`, as in:
+作为一种应急方案，你可以预安装包的构建依赖项，然后使用 `--no-build-isolation` 运行 `uv pip install`，如下所示：
 
 ```shell
 uv pip install wheel && uv pip install --no-build-isolation biopython==1.77
 ```
 
-For a list of packages that are known to fail under PEP 517 build isolation, see
-[#2252](https://github.com/astral-sh/uv/issues/2252).
+有关已知在 PEP 517 构建隔离下失败的包列表，请参阅 [#2252](https://github.com/astral-sh/uv/issues/2252)。
 
-## Transitive URL dependencies
+## 传递性 URL 依赖项
 
-While uv includes first-class support for URL dependencies (e.g., `ruff @ https://...`), it differs
-from pip in its handling of _transitive_ URL dependencies in two ways.
+虽然 uv 包含对 URL 依赖项（例如，`ruff @ https://...`）的一流支持，但它在处理 _传递性_ URL 依赖项方面与 pip 有两个不同之处。
 
-First, uv makes the assumption that non-URL dependencies do not introduce URL dependencies into the
-resolution. In other words, it assumes that dependencies fetched from a registry do not themselves
-depend on URLs. If a non-URL dependency _does_ introduce a URL dependency, uv will reject the URL
-dependency during resolution. (Note that PyPI does not allow published packages to depend on URL
-dependencies; other registries may be more permissive.)
+首先，uv 假设非 URL 依赖项不会将 URL 依赖项引入解析中。换句话说，它假设从注册表获取的依赖项本身不依赖于 URL。如果非 URL 依赖项 _确实_ 引入了 URL 依赖项，uv 将在解析期间拒绝该 URL 依赖项。（请注意，PyPI 不允许已发布的包依赖于 URL 依赖项；其他注册表可能更宽松。）
 
-Second, if a constraint (`--constraint`) or override (`--override`) is defined using a direct URL
-dependency, and the constrained package has a direct URL dependency of its own, uv _may_ reject that
-transitive direct URL dependency during resolution, if the URL isn't referenced elsewhere in the set
-of input requirements.
+其次，如果使用直接 URL 依赖项定义了约束 (`--constraint`) 或覆盖 (`--override`)，并且被约束的包有自己的直接 URL 依赖项，那么如果该 URL 没有在输入需求集合的其他地方被引用，uv _可能_ 会在解析期间拒绝该传递性直接 URL 依赖项。
 
-If uv rejects a transitive URL dependency, the best course of action is to provide the URL
-dependency as a direct dependency in the relevant `pyproject.toml` or `requirement.in` file, as the
-above constraints do not apply to direct dependencies.
+如果 uv 拒绝了传递性 URL 依赖项，最佳做法是将该 URL 依赖项作为直接依赖项提供给相关的 `pyproject.toml` 或 `requirement.in` 文件，因为上述约束不适用于直接依赖项。
 
-## Virtual environments by default
+## 默认使用虚拟环境
 
-`uv pip install` and `uv pip sync` are designed to work with virtual environments by default.
+`uv pip install` 和 `uv pip sync` 设计为默认在虚拟环境中工作。
 
-Specifically, uv will always install packages into the currently active virtual environment, or
-search for a virtual environment named `.venv` in the current directory or any parent directory
-(even if it is not activated).
+具体来说，uv 总是将包安装到当前激活的虚拟环境中，或者搜索当前目录或任何父目录中名为 `.venv` 的虚拟环境（即使它未激活）。
 
-This differs from `pip`, which will install packages into a global environment if no virtual
-environment is active, and will not search for inactive virtual environments.
+这与 `pip` 不同，如果没有虚拟环境被激活，`pip` 会将包安装到全局环境中，并且不会搜索未激活的虚拟环境。
 
-In uv, you can install into non-virtual environments by providing a path to a Python executable via
-the `--python /path/to/python` option, or via the `--system` flag, which installs into the first
-Python interpreter found on the `PATH`, like `pip`.
+在 uv 中，你可以通过 `--python /path/to/python` 选项提供 Python 可执行文件的路径，或者通过 `--system` 标志安装到非虚拟环境中，该标志会安装到 `PATH` 上找到的第一个 Python 解释器，就像 `pip` 一样。
 
-In other words, uv inverts the default, requiring explicit opt-in to installing into the system
-Python, which can lead to breakages and other complications, and should only be done in limited
-circumstances.
+换句话说，uv 反转了默认行为，需要明确选择加入才能安装到系统 Python 中，这可能导致损坏和其他复杂情况，应仅在有限情况下使用。
 
-For more, see
-["Using arbitrary Python environments"](./environments.md#using-arbitrary-python-environments).
+更多信息，请参阅 ["使用任意 Python 环境"](./environments.md#using-arbitrary-python-environments)。
 
-## Resolution strategy
+## 解析策略
 
-For a given set of dependency specifiers, it's often the case that there is no single "correct" set
-of packages to install. Instead, there are many valid sets of packages that satisfy the specifiers.
+对于一组给定的依赖项说明符，通常没有单一的"正确"包集可以安装。相反，有许多有效的包集可以满足这些说明符。
 
-Neither `pip` nor uv make any guarantees about the _exact_ set of packages that will be installed;
-only that the resolution will be consistent, deterministic, and compliant with the specifiers. As
-such, in some cases, `pip` and uv will yield different resolutions; however, both resolutions
-_should_ be equally valid.
+`pip` 和 uv 都不对 _确切_ 安装的包集做出任何保证；只保证解析将是一致的、确定性的并且符合说明符。因此，在某些情况下，`pip` 和 uv 会产生不同的解析结果；然而，两种解析结果 _应该_ 都是同样有效的。
 
-For example, consider:
+例如，考虑：
 
 ```python title="requirements.in"
 starlette
 fastapi
 ```
 
-At time of writing, the most recent `starlette` version is `0.37.2`, and the most recent `fastapi`
-version is `0.110.0`. However, `fastapi==0.110.0` also depends on `starlette`, and introduces an
-upper bound: `starlette>=0.36.3,<0.37.0`.
+在撰写本文时，最新的 `starlette` 版本是 `0.37.2`，最新的 `fastapi` 版本是 `0.110.0`。然而，`fastapi==0.110.0` 也依赖于 `starlette`，并引入了一个上限：`starlette>=0.36.3,<0.37.0`。
 
-If a resolver prioritizes including the most recent version of `starlette`, it would need to use an
-older version of `fastapi` that excludes the upper bound on `starlette`. In practice, this requires
-falling back to `fastapi==0.1.17`:
+如果解析器优先考虑包含最新版本的 `starlette`，则需要使用排除 `starlette` 上限的旧版本 `fastapi`。实际上，这需要回退到 `fastapi==0.1.17`：
 
 ```python title="requirements.txt"
 # This file was autogenerated by uv via the following command:
@@ -235,9 +153,7 @@ typing-extensions==4.10.0
     #   pydantic-core
 ```
 
-Alternatively, if a resolver prioritizes including the most recent version of `fastapi`, it would
-need to use an older version of `starlette` that satisfies the upper bound. In practice, this
-requires falling back to `starlette==0.36.3`:
+或者，如果解析器优先考虑包含最新版本的 `fastapi`，则需要使用满足上限的旧版本 `starlette`。实际上，这需要回退到 `starlette==0.36.3`：
 
 ```python title="requirements.txt"
 # This file was autogenerated by uv via the following command:
@@ -264,78 +180,53 @@ typing-extensions==4.10.0
     #   pydantic-core
 ```
 
-When uv resolutions differ from `pip` in undesirable ways, it's often a sign that the specifiers are
-too loose, and that the user should consider tightening them. For example, in the case of
-`starlette` and `fastapi`, the user could require `fastapi>=0.110.0`.
+当 uv 的解析结果与 `pip` 出现不希望的差异时，这通常表明说明符过于宽松，用户应该考虑收紧它们。例如，在 `starlette` 和 `fastapi` 的情况下，用户可以要求 `fastapi>=0.110.0`。
 
 ## `pip check`
 
-At present, `uv pip check` will surface the following diagnostics:
+目前，`uv pip check` 将显示以下诊断信息：
 
-- A package has no `METADATA` file, or the `METADATA` file can't be parsed.
-- A package has a `Requires-Python` that doesn't match the Python version of the running
-  interpreter.
-- A package has a dependency on a package that isn't installed.
-- A package has a dependency on a package that's installed, but at an incompatible version.
-- Multiple versions of a package are installed in the virtual environment.
+- 包没有 `METADATA` 文件，或者 `METADATA` 文件无法解析。
+- 包的 `Requires-Python` 与正在运行的解释器的 Python 版本不匹配。
+- 包依赖于一个未安装的包。
+- 包依赖于一个已安装但版本不兼容的包。
+- 在虚拟环境中安装了多个版本的包。
 
-In some cases, `uv pip check` will surface diagnostics that `pip check` does not, and vice versa.
-For example, unlike `uv pip check`, `pip check` will _not_ warn when multiple versions of a package
-are installed in the current environment.
+在某些情况下，`uv pip check` 会显示 `pip check` 不显示的诊断信息，反之亦然。例如，与 `uv pip check` 不同，`pip check` 在环境中安装了多个版本的包时 _不会_ 警告。
 
-## `--user` and the `user` install scheme
+## `--user` 和 `user` 安装方案
 
-uv does not support the `--user` flag, which installs packages based on the `user` install scheme.
-Instead, we recommend the use of virtual environments to isolate package installations.
+uv 不支持 `--user` 标志，该标志基于 `user` 安装方案安装包。相反，我们建议使用虚拟环境来隔离包安装。
 
-Additionally, pip will fall back to the `user` install scheme if it detects that the user does not
-have write permissions to the target directory, as is the case on some systems when installing into
-the system Python. uv does not implement any such fallback.
+此外，如果 pip 检测到用户没有目标目录的写入权限（例如在某些系统上安装到系统 Python 时），它会回退到 `user` 安装方案。uv 没有实现任何此类回退。
 
-For more, see [#2077](https://github.com/astral-sh/uv/issues/2077).
+更多信息，请参见 [#2077](https://github.com/astral-sh/uv/issues/2077)。
 
-## `--only-binary` enforcement
+## `--only-binary` 强制执行
 
-The `--only-binary` argument is used to restrict installation to pre-built binary distributions.
-When `--only-binary :all:` is provided, both pip and uv will refuse to build source distributions
-from PyPI and other registries.
+`--only-binary` 参数用于限制仅安装预构建的二进制发行版。当提供 `--only-binary :all:` 时，pip 和 uv 都将拒绝从 PyPI 和其他注册表构建源发行版。
 
-However, when a dependency is provided as a direct URL (e.g., `uv pip install https://...`), pip
-does _not_ enforce `--only-binary`, and will build source distributions for all such packages.
+然而，当依赖项作为直接 URL 提供时（例如，`uv pip install https://...`），pip 并 _不_ 强制执行 `--only-binary`，并且会为所有此类包构建源发行版。
 
-uv, meanwhile, _does_ enforce `--only-binary` for direct URL dependencies, with one exception: given
-`uv pip install https://... --only-binary flask`, uv _will_ build the source distribution at the
-given URL if it cannot infer the package name ahead of time, since uv can't determine whether the
-package is "allowed" in such cases without building its metadata.
+而 uv，则 _确实_ 对直接 URL 依赖项强制执行 `--only-binary`，但有一个例外：给定 `uv pip install https://... --only-binary flask`，如果 uv 无法提前推断出包名，它 _将_ 构建给定 URL 处的源发行版，因为在这种情况下，uv 无法在不构建其元数据的情况下确定该包是否"被允许"。
 
-Both pip and uv allow editables requirements to be built and installed even when `--only-binary` is
-provided. For example, `uv pip install -e . --only-binary :all:` is allowed.
+pip 和 uv 都允许在提供 `--only-binary` 时构建和安装可编辑需求。例如，`uv pip install -e . --only-binary :all:` 是允许的。
 
-## `--no-binary` enforcement
+## `--no-binary` 强制执行
 
-The `--no-binary` argument is used to restrict installation to source distributions. When
-`--no-binary` is provided, uv will refuse to install pre-built binary distributions, but _will_
-reuse any binary distributions that are already present in the local cache.
+`--no-binary` 参数用于限制仅安装源发行版。当提供 `--no-binary` 时，uv 将拒绝安装预构建的二进制发行版，但 _会_ 重用本地缓存中已存在的任何二进制发行版。
 
-Additionally, and in contrast to pip, uv's resolver will still read metadata from pre-built binary
-distributions when `--no-binary` is provided.
+此外，与 pip 相比，当提供 `--no-binary` 时，uv 的解析器仍会从预构建的二进制发行版中读取元数据。
 
-## `manylinux_compatible` enforcement
+## `manylinux_compatible` 强制执行
 
-[PEP 600](https://peps.python.org/pep-0600/#package-installers) describes a mechanism through which
-Python distributors can opt out of `manylinux` compatibility by defining a `manylinux_compatible`
-function on the `_manylinux` standard library module.
+[PEP 600](https://peps.python.org/pep-0600/#package-installers) 描述了一种机制，Python 发行商可以通过在 `_manylinux` 标准库模块上定义 `manylinux_compatible` 函数来选择退出 `manylinux` 兼容性。
 
-uv respects `manylinux_compatible`, but only tests against the current glibc version, and applies
-the return value of `manylinux_compatible` globally.
+uv 尊重 `manylinux_compatible`，但仅针对当前的 glibc 版本进行测试，并全局应用 `manylinux_compatible` 的返回值。
 
-In other words, if `manylinux_compatible` returns `True`, uv will treat the system as
-`manylinux`-compatible; if it returns `False`, uv will treat the system as `manylinux`-incompatible,
-without calling `manylinux_compatible` for every glibc version.
+换句话说，如果 `manylinux_compatible` 返回 `True`，uv 将系统视为 `manylinux` 兼容；如果返回 `False`，uv 将系统视为 `manylinux` 不兼容，而不会为每个 glibc 版本调用 `manylinux_compatible`。
 
-This approach is not a complete implementation of the spec, but is compatible with common blanket
-`manylinux_compatible` implementations like
-[`no-manylinux`](https://pypi.org/project/no-manylinux/):
+这种方法并非规范的完整实现，但与常见的通用 `manylinux_compatible` 实现（如 [`no-manylinux`](https://pypi.org/project/no-manylinux/)）兼容：
 
 ```python
 from __future__ import annotations
@@ -348,157 +239,101 @@ def manylinux_compatible(*_, **__):  # PEP 600
     return False
 ```
 
-## Bytecode compilation
+## 字节码编译
 
-Unlike `pip`, uv does not compile `.py` files to `.pyc` files during installation by default (i.e.,
-uv does not create or populate `__pycache__` directories). To enable bytecode compilation during
-installs, pass the `--compile-bytecode` flag to `uv pip install` or `uv pip sync`, or set the
-`UV_COMPILE_BYTECODE` environment variable to `1`.
+与 `pip` 不同，uv 默认不在安装期间将 `.py` 文件编译为 `.pyc` 文件（即，uv 不会创建或填充 `__pycache__` 目录）。要在安装期间启用字节码编译，请将 `--compile-bytecode` 标志传递给 `uv pip install` 或 `uv pip sync`，或者将 `UV_COMPILE_BYTECODE` 环境变量设置为 `1`。
 
-Skipping bytecode compilation can be undesirable in workflows; for example, we recommend enabling
-bytecode compilation in [Docker builds](../guides/integration/docker.md) to improve startup times
-(at the cost of increased build times).
+跳过字节码编译在某些工作流中可能是不希望的；例如，我们建议在 [Docker 构建](../guides/integration/docker.md) 中启用字节码编译以提高启动时间（以增加构建时间为代价）。
 
-As bytecode compilation suppresses various warnings issued by the Python interpreter, in rare cases
-you may seen `SyntaxWarning` or `DeprecationWarning` messages when running Python code that was
-installed with uv that do not appear when using `pip`. These are valid warnings, but are typically
-hidden by the bytecode compilation process, and can either be ignored, fixed upstream, or similarly
-suppressed by enabling bytecode compilation in uv.
+由于字节码编译会抑制 Python 解释器发出的各种警告，在极少数情况下，你可能会在运行使用 uv 安装的 Python 代码时看到 `SyntaxWarning` 或 `DeprecationWarning` 消息，而这些消息在使用 `pip` 时不会出现。这些是有效的警告，但通常被字节码编译过程隐藏，可以通过在 uv 中启用字节码编译来忽略、在上游修复或类似地抑制这些警告。
 
-## Strictness and spec enforcement
+## 严格性和规范执行
 
-uv tends to be stricter than `pip`, and will often reject packages that `pip` would install. For
-example, uv rejects HTML indexes with invalid URL fragments (see:
-[PEP 503](https://peps.python.org/pep-0503/)), while `pip` will ignore such fragments.
+uv 往往比 `pip` 更严格，并且经常拒绝 `pip` 会安装的包。例如，uv 拒绝具有无效 URL 片段的 HTML 索引（参见：[PEP 503](https://peps.python.org/pep-0503/)），而 `pip` 会忽略此类片段。
 
-In some cases, uv implements lenient behavior for popular packages that are known to have specific
-spec compliance issues.
+在某些情况下，uv 为已知存在特定规范合规性问题的流行包实现了宽松的行为。
 
-If uv rejects a package that `pip` would install due to a spec violation, the best course of action
-is to first attempt to install a newer version of the package; and, if that fails, to report the
-issue to the package maintainer.
+如果 uv 由于违反规范而拒绝安装 `pip` 会安装的包，最佳做法是首先尝试安装更新版本的包；如果失败，则向包维护者报告该问题。
 
-## `pip` command-line options and subcommands
+## `pip` 命令行选项和子命令
 
-uv does not support the complete set of `pip`'s command-line options and subcommands, although it
-does support a large subset.
+uv 不支持 `pip` 的完整命令行选项和子命令集，尽管它支持一个很大的子集。
 
-Missing options and subcommands are prioritized based on user demand and the complexity of the
-implementation, and tend to be tracked in individual issues. For example:
+缺失的选项和子命令根据用户需求和实现的复杂性进行优先级排序，并倾向于在单独的问题中进行跟踪。例如：
 
 - [`--trusted-host`](https://github.com/astral-sh/uv/issues/1339)
 - [`--user`](https://github.com/astral-sh/uv/issues/2077)
 
-If you encounter a missing option or subcommand, please search the issue tracker to see if it has
-already been reported, and if not, consider opening a new issue. Feel free to upvote any existing
-issues to convey your interest.
+如果你遇到缺失的选项或子命令，请搜索问题跟踪器以查看是否已报告，如果没有，请考虑打开一个新问题。请随时对任何现有问题进行投票以表达你的兴趣。
 
-## Registry authentication
+## 注册表认证
 
-uv does not support `pip`'s `auto` or `import` options for `--keyring-provider`. At present, only
-the `subprocess` option is supported.
+uv 不支持 `pip` 的 `auto` 或 `import` 选项（用于 `--keyring-provider`）。目前，仅支持 `subprocess` 选项。
 
-Unlike `pip`, uv does not enable keyring authentication by default.
+与 `pip` 不同，uv 默认不启用密钥环认证。
 
-Unlike `pip`, uv does not wait until a request returns an HTTP 401 before searching for
-authentication. uv attaches authentication to all requests for hosts with credentials available.
+与 `pip` 不同，uv 不会等到请求返回 HTTP 401 后才搜索认证。uv 会为所有具有可用凭据的主机的请求附加认证信息。
 
-## `egg` support
+## `egg` 支持
 
-uv does not support features that are considered legacy or deprecated in `pip`. For example, uv does
-not support `.egg`-style distributions.
+uv 不支持 `pip` 中视为遗留或已弃用的功能。例如，uv 不支持 `.egg` 风格的分发包。
 
-However, uv does have partial support for (1) `.egg-info`-style distributions (which are
-occasionally found in Docker images and Conda environments) and (2) legacy editable
-`.egg-link`-style distributions.
+但是，uv 对 (1) `.egg-info` 风格的分发包（偶尔在 Docker 镜像和 Conda 环境中找到）和 (2) 遗留的可编辑 `.egg-link` 风格的分发包提供了部分支持。
 
-Specifically, uv does not support installing new `.egg-info`- or `.egg-link`-style distributions,
-but will respect any such existing distributions during resolution, list them with `uv pip list` and
-`uv pip freeze`, and uninstall them with `uv pip uninstall`.
+具体来说，uv 不支持安装新的 `.egg-info` 或 `.egg-link` 风格的分发包，但会在解析期间尊重任何此类现有分发包，使用 `uv pip list` 和 `uv pip freeze` 列出它们，并使用 `uv pip uninstall` 卸载它们。
 
-## Build constraints
+## 构建约束
 
-When constraints are provided via `--constraint` (or `UV_CONSTRAINT`), uv will _not_ apply the
-constraints when resolving build dependencies (i.e., to build a source distribution). Instead, build
-constraints should be provided via the dedicated `--build-constraint` (or `UV_BUILD_CONSTRAINT`)
-setting.
+当通过 `--constraint`（或 `UV_CONSTRAINT`）提供约束时，uv 在解析构建依赖项（即构建源发行版）时 _不会_ 应用这些约束。相反，构建约束应通过专用的 `--build-constraint`（或 `UV_BUILD_CONSTRAINT`）设置提供。
 
-pip, meanwhile, applies constraints to build dependencies when specified via `PIP_CONSTRAINT`, but
-not when provided via `--constraint` on the command line.
+而 pip 在通过 `PIP_CONSTRAINT` 指定时会对构建依赖项应用约束，但在命令行上通过 `--constraint` 提供时则不会。
 
-For example, to ensure that `setuptools 60.0.0` is used to build any packages with a build
-dependency on `setuptools`, use `--build-constraint`, rather than `--constraint`.
+例如，要确保使用 `setuptools 60.0.0` 来构建任何具有 `setuptools` 构建依赖项的包，请使用 `--build-constraint`，而不是 `--constraint`。
 
-## `pip compile` defaults
+## `pip compile` 默认值
 
-There are a few small but notable differences in the default behaviors of `pip compile` and
-`pip-tools`.
+`pip compile` 和 `pip-tools` 的默认行为存在一些微小但值得注意的差异。
 
-By default, uv does not write the compiled requirements to an output file. Instead, uv requires that
-the user specify an output file explicitly with the `-o` or `--output-file` option.
+默认情况下，uv 不会将编译后的需求写入输出文件。相反，uv 要求用户使用 `-o` 或 `--output-file` 选项明确指定输出文件。
 
-By default, uv strips extras when outputting the compiled requirements. In other words, uv defaults
-to `--strip-extras`, while `pip-compile` defaults to `--no-strip-extras`. `pip-compile` is scheduled
-to change this default in the next major release (v8.0.0), at which point both tools will default to
-`--strip-extras`. To retain extras with uv, pass the `--no-strip-extras` flag to `uv pip compile`.
+默认情况下，uv 在输出编译后的需求时会剥离 extras。换句话说，uv 默认为 `--strip-extras`，而 `pip-compile` 默认为 `--no-strip-extras`。`pip-compile` 计划在下一个主要版本（v8.0.0）中更改此默认值，届时两个工具都将默认使用 `--strip-extras`。要在 uv 中保留 extras，请将 `--no-strip-extras` 标志传递给 `uv pip compile`。
 
-By default, uv does not write any index URLs to the output file, while `pip-compile` outputs any
-`--index-url` or `--extra-index-url` that does not match the default (PyPI). To include index URLs
-in the output file, pass the `--emit-index-url` flag to `uv pip compile`. Unlike `pip-compile`, uv
-will include all index URLs when `--emit-index-url` is passed, including the default index URL.
+默认情况下，uv 不会将任何索引 URL 写入输出文件，而 `pip-compile` 会输出任何与默认值（PyPI）不匹配的 `--index-url` 或 `--extra-index-url`。要在输出文件中包含索引 URL，请将 `--emit-index-url` 标志传递给 `uv pip compile`。与 `pip-compile` 不同，当传递 `--emit-index-url` 时，uv 将包含所有索引 URL，包括默认索引 URL。
 
-## `requires-python` upper bounds
+## `requires-python` 上限
 
-When evaluating `requires-python` ranges for dependencies, uv only considers lower bounds and
-ignores upper bounds entirely. For example, `>=3.8, <4` is treated as `>=3.8`. Respecting upper
-bounds on `requires-python` often leads to formally correct but practically incorrect resolutions,
-as, e.g., resolvers will backtrack to the first published version that omits the upper bound (see:
-[`Requires-Python` upper limits](https://discuss.python.org/t/requires-python-upper-limits/12663)).
+在评估依赖项的 `requires-python` 范围时，uv 只考虑下限而完全忽略上限。例如，`>=3.8, <4` 被视为 `>=3.8`。尊重 `requires-python` 的上限通常会导致形式上正确但实际上不正确的解析，因为，例如，解析器会回溯到第一个发布时省略了上限的版本（参见：[`Requires-Python` 上限限制](https://discuss.python.org/t/requires-python-upper-limits/12663)）。
 
-## `requires-python` specifiers
+## `requires-python` 说明符
 
-When evaluating Python versions against `requires-python` specifiers, uv truncates the candidate
-version to the major, minor, and patch components, ignoring (e.g.) pre-release and post-release
-identifiers.
+在针对 `requires-python` 说明符评估 Python 版本时，uv 会将候选版本截断为主要、次要和补丁组件，忽略（例如）预发布和后发布标识符。
 
-For example, a project that declares `requires-python: >=3.13` will accept Python 3.13.0b1. While
-3.13.0b1 is not strictly greater than 3.13, it is greater than 3.13 when the pre-release identifier
-is omitted.
+例如，声明 `requires-python: >=3.13` 的项目将接受 Python 3.13.0b1。虽然 3.13.0b1 并不严格大于 3.13，但当忽略预发布标识符时，它大于 3.13。
 
-While this is not strictly compliant with [PEP 440](https://peps.python.org/pep-0440/), it _is_
-consistent with
-[pip](https://github.com/pypa/pip/blob/24.1.1/src/pip/_internal/resolution/resolvelib/candidates.py#L540).
+虽然这并不严格符合 [PEP 440](https://peps.python.org/pep-0440/)，但它 _确实_ 与
+[pip](https://github.com/pypa/pip/blob/24.1.1/src/pip/_internal/resolution/resolvelib/candidates.py#L540) 一致。
 
-## Package priority
+## 包优先级
 
-There are usually many possible solutions given a set of requirements, and a resolver must choose
-between them. uv's resolver and pip's resolver have a different set of package priorities. While
-both resolvers use the user-provided order as one of their priorities, pip has additional
-[priorities](https://pip.pypa.io/en/stable/topics/more-dependency-resolution/#the-resolver-algorithm)
-that uv does not have. Hence, uv is more likely to be affected by a change in user order than pip
-is.
+给定一组需求，通常有许多可能的解决方案，解析器必须在它们之间做出选择。uv 的解析器和 pip 的解析器具有不同的包优先级集。虽然两个解析器都使用用户提供的顺序作为其优先级之一，但 pip 具有 uv 没有的额外
+[优先级](https://pip.pypa.io/en/stable/topics/more-dependency-resolution/#the-resolver-algorithm)。
+因此，uv 比 pip 更容易受到用户顺序变化的影响。
 
-For example, `uv pip install foo bar` prioritizes newer versions of `foo` over `bar` and could
-result in a different resolution than `uv pip install bar foo`. Similarly, this behavior applies to
-the ordering of requirements in input files for `uv pip compile`.
+例如，`uv pip install foo bar` 优先考虑 `foo` 的新版本而不是 `bar`，并可能导致与 `uv pip install bar foo` 不同的解析结果。类似地，此行为适用于 `uv pip compile` 输入文件中需求的排序。
 
-## Wheel filename and metadata validation
+## Wheel 文件名和元数据验证
 
-By default, uv will reject wheels whose filenames are inconsistent with the wheel metadata inside
-the file. For example, a wheel named `foo-1.0.0-py3-none-any.whl` that contains metadata indicating
-the version is `1.0.1` will be rejected by uv, but accepted by pip.
+默认情况下，uv 会拒绝那些文件名与文件内的 wheel 元数据不一致的 wheel。例如，一个名为 `foo-1.0.0-py3-none-any.whl` 但其内部元数据显示版本为 `1.0.1` 的 wheel 将被 uv 拒绝，但会被 pip 接受。
 
-To force uv to accept such wheels, set `UV_SKIP_WHEEL_FILENAME_CHECK=1` in the environment.
+要强制 uv 接受此类 wheel，请在环境中设置 `UV_SKIP_WHEEL_FILENAME_CHECK=1`。
 
-## Package name normalization
+## 包名称规范化
 
-By default, uv normalizes package names to match their
-[PEP 503-compliant forms](https://packaging.python.org/en/latest/specifications/name-normalization/#name-normalization)
-and uses those normalized names in all output contexts. This differs from pip, which tends to
-preserve the verbatim package name as published on the registry.
+默认情况下，uv 会将包名称规范化为其
+[符合 PEP 503 的形式](https://packaging.python.org/en/latest/specifications/name-normalization/#name-normalization)，
+并在所有输出上下文中使用这些规范化名称。这与 pip 不同，pip 倾向于保留注册表上发布的逐字包名称。
 
-For example, `uv pip list` displays normalized packages names (e.g., `docstring-parser`), while
-`pip list` displays non-normalized package names (e.g., `docstring_parser`):
+例如，`uv pip list` 显示规范化的包名称（例如，`docstring-parser`），而 `pip list` 显示非规范化的包名称（例如，`docstring_parser`）：
 
 ```shell
 (venv) $ diff --side-by-side  <(pip list) <(uv pip list)

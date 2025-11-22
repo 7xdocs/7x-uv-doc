@@ -1,33 +1,22 @@
-# The uv build backend
+# uv 构建后端
 
-A build backend transforms a source tree (i.e., a directory) into a source distribution or a wheel.
+构建后端将源树（即目录）转换为源分发版或 wheel。
 
-uv supports all build backends (as specified by [PEP 517](https://peps.python.org/pep-0517/)), but
-also provides a native build backend (`uv_build`) that integrates tightly with uv to improve
-performance and user experience.
+uv 支持所有构建后端（遵循 [PEP 517](https://peps.python.org/pep-0517/) 规范），但也提供了一个原生构建后端 (`uv_build`)，该后端与 uv 紧密集成以提升性能和用户体验。
 
-## Choosing a build backend
+## 选择构建后端
 
-The uv build backend is a great choice for most Python projects. It has reasonable defaults, with
-the goal of requiring zero configuration for most users, but provides flexible configuration to
-accommodate most Python project structures. It integrates tightly with uv, to improve messaging and
-user experience. It validates project metadata and structures, preventing common mistakes. And,
-finally, it's very fast.
+对于大多数 Python 项目而言，uv 构建后端是一个很好的选择。它拥有合理的默认值，旨在为大多数用户实现零配置，同时提供了灵活的配置以适应大多数 Python 项目结构。它与 uv 紧密集成，以改善消息传递和用户体验。它验证项目元数据和结构，防止常见错误。最后，它的速度非常快。
 
-The uv build backend currently **only supports pure Python code**. An alternative backend is
-required to build a
-[library with extension modules](../concepts/projects/init.md#projects-with-extension-modules).
+uv 构建后端目前**仅支持纯 Python 代码**。构建[带有扩展模块的库](../concepts/projects/init.md#projects-with-extension-modules)需要使用替代的构建后端。
 
 !!! tip
 
-    While the backend supports a number of options for configuring your project structure, when build scripts or
-    a more flexible project layout are required, consider using the
-    [hatchling](https://hatch.pypa.io/latest/config/build/#build-system) build backend instead.
+    虽然该后端支持多种选项来配置您的项目结构，但当需要构建脚本或更灵活的项目布局时，请考虑使用 [hatchling](https://hatch.pypa.io/latest/config/build/#build-system) 构建后端。
 
-## Using the uv build backend
+## 使用 uv 构建后端
 
-To use uv as a build backend in an existing project, add `uv_build` to the
-[`[build-system]`](../concepts/projects/config.md#build-systems) section in your `pyproject.toml`:
+要在现有项目中使用 uv 作为构建后端，请将 `uv_build` 添加到您 `pyproject.toml` 文件中的 [`[build-system]`](../concepts/projects/config.md#build-systems) 部分：
 
 ```toml title="pyproject.toml"
 [build-system]
@@ -37,34 +26,25 @@ build-backend = "uv_build"
 
 !!! note
 
-    The uv build backend follows the same [versioning policy](../reference/policies/versioning.md)
-    as uv. Including an upper bound on the `uv_build` version ensures that your package continues to
-    build correctly as new versions are released.
+    uv 构建后端遵循与 uv 相同的[版本控制策略](../reference/policies/versioning.md)。在 `uv_build` 版本上包含一个上限可以确保在新版本发布时您的包仍能正确构建。
 
-To create a new project that uses the uv build backend, use `uv init`:
+要创建一个使用 uv 构建后端的新项目，请使用 `uv init`：
 
 ```console
 $ uv init
 ```
 
-When the project is built, e.g., with [`uv build`](../guides/package.md), the uv build backend will
-be used to create the source distribution and wheel.
+当项目被构建时，例如使用 [`uv build`](../guides/package.md)，uv 构建后端将被用于创建源分发版和 wheel。
 
-## Bundled build backend
+## 捆绑的构建后端
 
-The build backend is published as a separate package (`uv_build`) that is optimized for portability
-and small binary size. However, the `uv` executable also includes a copy of the build backend, which
-will be used during builds performed by uv, e.g., during `uv build`, if its version is compatible
-with the `uv_build` requirement. If it's not compatible, a compatible version of the `uv_build`
-package will be used. Other build frontends, such as `python -m build`, will always use the
-`uv_build` package, typically choosing the latest compatible version.
+该构建后端作为一个独立的包 (`uv_build`) 发布，该包针对可移植性和小二进制大小进行了优化。然而，`uv` 可执行文件也包含了一份构建后端的副本，如果其版本与 `uv_build` 要求兼容，则在由 uv 执行的构建过程中（例如在 `uv build` 期间）将会使用它。如果版本不兼容，则将使用兼容版本的 `uv_build` 包。其他构建前端，例如 `python -m build`，将始终使用 `uv_build` 包，通常会选择最新的兼容版本。
 
-## Modules
+## 模块
 
-Python packages are expected to contain one or more Python modules, which are directories containing
-an `__init__.py`. By default, a single root module is expected at `src/<package_name>/__init__.py`.
+Python 包预期包含一个或多个 Python 模块，模块是包含 `__init__.py` 的目录。默认情况下，预期在 `src/<package_name>/__init__.py` 处有一个单一的根模块。
 
-For example, the structure for a project named `foo` would be:
+例如，一个名为 `foo` 的项目结构将是：
 
 ```text
 pyproject.toml
@@ -73,13 +53,11 @@ src
     └── __init__.py
 ```
 
-uv normalizes the package name to determine the default module name: the package name is lowercased
-and dots and dashes are replaced with underscores, e.g., `Foo-Bar` would be converted to `foo_bar`.
+uv 对包名进行规范化以确定默认的模块名：包名被转换为小写，点号和破折号被替换为下划线，例如，`Foo-Bar` 将被转换为 `foo_bar`。
 
-The `src/` directory is the default directory for module discovery.
+`src/` 目录是模块发现的默认目录。
 
-These defaults can be changed with the `module-name` and `module-root` settings. For example, to use
-a `FOO` module in the root directory, as in the project structure:
+这些默认值可以通过 `module-name` 和 `module-root` 设置来更改。例如，要在根目录中使用名为 `FOO` 的模块，项目结构如下：
 
 ```text
 pyproject.toml
@@ -87,7 +65,7 @@ FOO
 └── __init__.py
 ```
 
-The correct build configuration would be:
+正确的构建配置将是：
 
 ```toml title="pyproject.toml"
 [tool.uv.build-backend]
@@ -95,13 +73,11 @@ module-name = "FOO"
 module-root = ""
 ```
 
-## Namespace packages
+## 命名空间包
 
-Namespace packages are intended for use-cases where multiple packages write modules into a shared
-namespace.
+命名空间包适用于多个包将模块写入共享命名空间的用例。
 
-Namespace package modules are identified by a `.` in the `module-name`. For example, to package the
-module `bar` in the shared namespace `foo`, the project structure would be:
+命名空间包模块通过 `module-name` 中的 `.` 来标识。例如，要将模块 `bar` 打包到共享命名空间 `foo` 中，项目结构将是：
 
 ```text
 pyproject.toml
@@ -111,7 +87,7 @@ src
         └── __init__.py
 ```
 
-And the `module-name` configuration would be:
+并且 `module-name` 配置将是：
 
 ```toml title="pyproject.toml"
 [tool.uv.build-backend]
@@ -120,10 +96,9 @@ module-name = "foo.bar"
 
 !!! important
 
-    The `__init__.py` file is not included in `foo`, since it's the shared namespace module.
+    `foo` 目录中不包含 `__init__.py` 文件，因为它是一个共享的命名空间模块。
 
-It's also possible to have a complex namespace package with more than one root module, e.g., with
-the project structure:
+也可以拥有具有多个根模块的复杂命名空间包，例如，项目结构如下：
 
 ```text
 pyproject.toml
@@ -134,16 +109,14 @@ src
     └── __init__.py
 ```
 
-While we do not recommend this structure (i.e., you should use a workspace with multiple packages
-instead), it is supported by setting `module-name` to a list of names:
+虽然我们不推荐这种结构（即您应该改用包含多个包的工作区），但通过将 `module-name` 设置为名称列表来支持它：
 
 ```toml title="pyproject.toml"
 [tool.uv.build-backend]
 module-name = ["foo", "bar"]
 ```
 
-For packages with many modules or complex namespaces, the `namespace = true` option can be used to
-avoid explicitly declaring each module name, e.g.:
+对于具有许多模块或复杂命名空间的包，可以使用 `namespace = true` 选项来避免显式声明每个模块名，例如：
 
 ```toml title="pyproject.toml"
 [tool.uv.build-backend]
@@ -152,11 +125,9 @@ namespace = true
 
 !!! warning
 
-    Using `namespace = true` disables safety checks. Using an explicit list of module names is
-    strongly recommended outside of legacy projects.
+    使用 `namespace = true` 会禁用安全检查。强烈建议在遗留项目之外使用显式的模块名列表。
 
-The `namespace` option can also be used with `module-name` to explicitly declare the root, e.g., for
-the project structure:
+`namespace` 选项也可以与 `module-name` 一起使用来显式声明根命名空间，例如，对于以下项目结构：
 
 ```text
 pyproject.toml
@@ -168,7 +139,7 @@ src
         └── __init__.py
 ```
 
-The recommended configuration would be:
+推荐的配置是：
 
 ```toml title="pyproject.toml"
 [tool.uv.build-backend]
@@ -176,12 +147,9 @@ module-name = "foo"
 namespace = true
 ```
 
-## Stub packages
+## 存根包
 
-The build backend also supports building type stub packages, which are identified by the `-stubs`
-suffix on the package or module name, e.g., `foo-stubs`. The module name for type stub packages must
-end in `-stubs`, so uv will not normalize the `-` to an underscore. Additionally, uv will search for
-a `__init__.pyi` file. For example, the project structure would be:
+该构建后端也支持构建类型存根包，这些包通过包名或模块名上的 `-stubs` 后缀来标识，例如 `foo-stubs`。类型存根包的模块名必须以 `-stubs` 结尾，因此 uv 不会将 `-` 规范化为下划线。此外，uv 将搜索 `__init__.pyi` 文件。例如，项目结构将是：
 
 ```text
 pyproject.toml
@@ -190,75 +158,49 @@ src
     └── __init__.pyi
 ```
 
-Type stub modules are also supported for [namespace packages](#namespace-packages).
+类型存根模块也支持[命名空间包](#namespace-packages)。
 
-## File inclusion and exclusion
+## 文件包含与排除
 
-The build backend is responsible for determining which files in a source tree should be packaged
-into the distributions.
+构建后端负责确定源树中的哪些文件应被打包到分发版中。
 
-To determine which files to include in a source distribution, uv first adds the included files and
-directories, then removes the excluded files and directories. This means that exclusions always take
-precedence over inclusions.
+为了确定在源分发版中包含哪些文件，uv 首先添加包含的文件和目录，然后移除排除的文件和目录。这意味着排除总是优先于包含。
 
-By default, uv excludes `__pycache__`, `*.pyc`, and `*.pyo`.
+默认情况下，uv 排除 `__pycache__`、`*.pyc` 和 `*.pyo`。
 
-When building a source distribution, the following files and directories are included:
+在构建源分发版时，以下文件和目录被包含：
 
-- The `pyproject.toml`
-- The [module](#modules) under
-  [`tool.uv.build-backend.module-root`](../reference/settings.md#build-backend_module-root).
-- The files referenced by `project.license-files` and `project.readme`.
-- All directories under [`tool.uv.build-backend.data`](../reference/settings.md#build-backend_data).
-- All files matching patterns from
-  [`tool.uv.build-backend.source-include`](../reference/settings.md#build-backend_source-include).
+- `pyproject.toml` 文件
+- 位于 [`tool.uv.build-backend.module-root`](../reference/settings.md#build-backend_module-root) 下的[模块](#modules)。
+- 由 `project.license-files` 和 `project.readme` 引用的文件。
+- [`tool.uv.build-backend.data`](../reference/settings.md#build-backend_data) 下的所有目录。
+- 匹配 [`tool.uv.build-backend.source-include`](../reference/settings.md#build-backend_source-include) 模式的所有文件。
 
-From these, items matching
-[`tool.uv.build-backend.source-exclude`](../reference/settings.md#build-backend_source-exclude) and
-the [default excludes](../reference/settings.md#build-backend_default-excludes) are removed.
+从这些内容中，匹配 [`tool.uv.build-backend.source-exclude`](../reference/settings.md#build-backend_source-exclude) 和[默认排除项](../reference/settings.md#build-backend_default-excludes) 的项目将被移除。
 
-When building a wheel, the following files and directories are included:
+在构建 wheel 时，以下文件和目录被包含：
 
-- The [module](#modules) under
-  [`tool.uv.build-backend.module-root`](../reference/settings.md#build-backend_module-root)
-- The files referenced by `project.license-files`, which are copied into the `.dist-info` directory.
-- The `project.readme`, which is copied into the project metadata.
-- All directories under [`tool.uv.build-backend.data`](../reference/settings.md#build-backend_data),
-  which are copied into the `.data` directory.
+- 位于 [`tool.uv.build-backend.module-root`](../reference/settings.md#build-backend_module-root) 下的[模块](#modules)。
+- 由 `project.license-files` 引用的文件，这些文件被复制到 `.dist-info` 目录中。
+- `project.readme` 文件，它被复制到项目元数据中。
+- [`tool.uv.build-backend.data`](../reference/settings.md#build-backend_data) 下的所有目录，这些目录被复制到 `.data` 目录中。
 
-From these,
-[`tool.uv.build-backend.source-exclude`](../reference/settings.md#build-backend_source-exclude),
-[`tool.uv.build-backend.wheel-exclude`](../reference/settings.md#build-backend_wheel-exclude) and
-the default excludes are removed. The source dist excludes are applied to avoid source tree to wheel
-source builds including more files than source tree to source distribution to wheel build.
+从这些内容中，[`tool.uv.build-backend.source-exclude`](../reference/settings.md#build-backend_source-exclude)、[`tool.uv.build-backend.wheel-exclude`](../reference/settings.md#build-backend_wheel-exclude) 以及默认排除项将被移除。应用源分发版排除是为了避免从源树到 wheel 的构建比从源树到源分发版再到 wheel 的构建包含更多的文件。
 
-There are no specific wheel includes. There must only be one top level module, and all data files
-must either be under the module root or in the appropriate
-[data directory](../reference/settings.md#build-backend_data). Most packages store small data in the
-module root alongside the source code.
+没有特定的 wheel 包含项。必须只有一个顶级模块，并且所有数据文件必须位于模块根目录下或适当的[数据目录](../reference/settings.md#build-backend_data)中。大多数包将小数据存储在模块根目录下，与源代码放在一起。
 
 !!! tip
 
-    When using the uv build backend through a frontend that is not uv, such as pip or
-    `python -m build`, debug logging can be enabled through environment variables with
-    `RUST_LOG=uv=debug` or `RUST_LOG=uv=verbose`. When used through uv, the uv build backend shares
-    the verbosity level of uv.
+    当通过非 uv 的前端（如 pip 或 `python -m build`）使用 uv 构建后端时，可以通过环境变量 `RUST_LOG=uv=debug` 或 `RUST_LOG=uv=verbose` 启用调试日志记录。当通过 uv 使用时，uv 构建后端共享 uv 的详细级别。
 
-### Include and exclude syntax
+### 包含与排除语法
 
-Includes are anchored, which means that `pyproject.toml` includes only `<root>/pyproject.toml` and
-not `<root>/bar/pyproject.toml`. To recursively include all files under a directory, use a `/**`
-suffix, e.g. `src/**`. Recursive inclusions are also anchored, e.g., `assets/**/sample.csv` includes
-all `sample.csv` files in `<root>/assets` or any of its children.
+包含是锚定的，这意味着 `pyproject.toml` 仅包含 `<root>/pyproject.toml`，而不包含 `<root>/bar/pyproject.toml`。要递归地包含目录下的所有文件，请使用 `/**` 后缀，例如 `src/**`。递归包含也是锚定的，例如，`assets/**/sample.csv` 包含 `<root>/assets` 或其任何子目录中的所有 `sample.csv` 文件。
 
 !!! note
 
-    For performance and reproducibility, avoid patterns without an anchor such as `**/sample.csv`.
+    为了性能和可重现性，请避免使用没有锚点的模式，例如 `**/sample.csv`。
 
-Excludes are not anchored, which means that `__pycache__` excludes all directories named
-`__pycache__` regardless of its parent directory. All children of an exclusion are excluded as well.
-To anchor a directory, use a `/` prefix, e.g., `/dist` will exclude only `<root>/dist`.
+排除不是锚定的，这意味着 `__pycache__` 会排除所有名为 `__pycache__` 的目录，无论其父目录是什么。排除项的所有子项也会被排除。要锚定一个目录，请使用 `/` 前缀，例如，`/dist` 将仅排除 `<root>/dist`。
 
-All fields accepting patterns use the reduced portable glob syntax from
-[PEP 639](https://peps.python.org/pep-0639/#add-license-FILES-key), with the addition that
-characters can be escaped with a backslash.
+所有接受模式的字段都使用 [PEP 639](https://peps.python.org/pep-0639/#add-license-FILES-key) 中的简化可移植 glob 语法，并增加了可以使用反斜杠转义字符的功能。
